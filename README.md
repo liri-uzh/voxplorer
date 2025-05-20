@@ -1,5 +1,5 @@
-# LiRI–voxplorer
-The LiRI voxplorer is a dashboard to explore your speech data.  
+# Voxplorer
+Voxplorer is a dashboard to explore your speech data.  
 The main features are:
 - Feature extraction of files or pre-processed data table upload.
 - Interactive table visualisation, filtering, and sorting.
