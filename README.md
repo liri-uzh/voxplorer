@@ -1,4 +1,4 @@
-# voxplorer (Alpha v0.0.1)
+# voxplorer (Alpha v1.0.0)
 ![Embedding Projector example](screenshots/embedding_dark.png)  
 
 | Table of Contents               |
