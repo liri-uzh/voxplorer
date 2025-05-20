@@ -1,0 +1,15 @@
+name: voxplorer
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10.*
+  - nomkl
+  - pandas
+  - umap-learn
+  - pytorch
+  - torchaudio
+  - librosa
+  - pytest
+  - pip
