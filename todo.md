@@ -1,11 +1,13 @@
 # TODO document for LiRI-DORA.
 - [x] pages basic layout
+- [ ] README
+
 
 ## Visualiser
     - [-] table view page functions and callbacks
-    - [ ] plot view page functions and callbacks
+    - [x] plot view page functions and callbacks
     - [-] interconnectivity across pages (persistance of data + filtering on same data)
-    - [ ] feature extraction and data stream
+    - [ ] **feature extraction and data stream**
 ### Layouts
     - [ ] Options card:
         - if audio upload:
@@ -14,10 +16,10 @@
         x if table upload:
             x -> select meta-information
     - [x] Table preview + filtering and selection/deselection
-    - [ ] Plot options card:
+    - [x] Plot options card:
         - dim-reduction selection
         - dim-reduction specific options
-    - [ ] Plot view + col / shape selection
+    - [x] Plot view + col / shape selection
 
 ## Recogniser
     - [ ] model selection
