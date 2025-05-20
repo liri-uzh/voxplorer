@@ -1,18 +1,10 @@
-# Tensorboard specific files
-for_tensorboard/
-logs/
-
 # Misc.
 .vscode
 .DS_Store
 __pycache__
-test_voxplorer_env_OSX.yml
 
-# pretrained classifier hyperparameters
-.pretrained_classifier
-
-# Demo folder & presentation
-demo/input_data
-demo/output_data
-*.pptx
-
+# Pretrained classifier hyperparameters
+.pretrained_spkrec_models/
+tmp.py
+tmp.txt
+bak
