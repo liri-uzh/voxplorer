@@ -236,13 +236,13 @@ class TestFeatureExtractor(unittest.TestCase):
         )
 
         self.assertIsInstance(
-            fe.audio_path,
+            fe.audio_files,
             list,
         )
         self.assertListEqual(
-            fe.audio_path,
+            fe.audio_files,
             list(self.audio_files[0]),
-            "fe.audio_path is different when initiated with a file",
+            "fe.audio_files is different when initiated with a file",
         )
 
         fe = FeatureExtractor(
@@ -251,19 +251,19 @@ class TestFeatureExtractor(unittest.TestCase):
             metavars=self.metavars,
         )
         self.assertIsInstance(
-            fe.audio_path,
+            fe.audio_files,
             list,
         )
         self.assertListEqual(
-            fe.audio_path,
+            fe.audio_files,
             self.audio_files,
-            "fe.audio_path is different when initiated with a directory",
+            "fe.audio_files is different when initiated with a directory",
         )
 
     def test_process_files(self):
         fe = FeatureExtractor(
             audio_path=self.audio_path,
-            feature_methods=self.feature_methods,
+            feature_mthods=self.feature_methods,
             metavars=self.metavars,
         )
 
@@ -295,7 +295,7 @@ class TestFeatureExtractor(unittest.TestCase):
             list(features.keys()),
             expected["feature_labels"],
         )
-        self.asssertEqual(
+        self.assertEqual(
             len(features["c1_mean"]),
             expexted["n_obs"],
         )
