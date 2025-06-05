@@ -33,8 +33,6 @@ class FeatureExtractor:
                 'mel_features': {'n_mfccs' : 13, 'n_mels': 40, 'win_length': 25.0,
                                 'overlap': 10.0, 'delta': True, 'delta_delta': False,
                                 'summarise': True},
-                'lpc_features': {'n_lpccs': 13, 'win_length': 25.0, 'overlap': 10.0,
-                                 'order': 26, 'summarise': True},
                 'speaker_embeddings': {'model': 'speechbrain/spkrec-ecapa-voxceleb'}
             }
     metavars: dict, optional
@@ -60,8 +58,6 @@ class FeatureExtractor:
     -------
     mel_features
         Extracts mfccs (and delta and delta-delta) from audio file.
-    lpc_features
-        Extracts lpccs from audio file.
     speaker_embeddings
         Extracts speaker embeddings from audio files.
     extract_metadata
@@ -74,8 +70,11 @@ class FeatureExtractor:
     """
 
     def __init__(
-            self, audio_path: str, feature_methods: dict,
-            metavars: dict = {'variables': None, 'split_char': '_'}) -> None:
+        self,
+        audio_path: str,
+        feature_methods: dict,
+        metavars: dict = {"variables": None, "split_char": "_"},
+    ) -> None:
         """Initialises the FeatureExtractor class.
 
         Parameters
@@ -85,7 +84,7 @@ class FeatureExtractor:
         feature_methods: dict
             Dictionary containing feature methods. Keys are the method names,
             values are the arguments passed to the method. Accepted methods are
-            'mel_features', 'lpc_features', and 'speaker_embeddings'.
+            'mel_features', and 'speaker_embeddings'.
         metavars: dict, optional
             Dictionary containing metadata variables to extract. They should have the same
             index as the variable in the filename split by `split_char`. If '-'
@@ -97,33 +96,50 @@ class FeatureExtractor:
 
         if os.path.isdir(audio_path):
             self.audio_files = [
-                os.path.join(audio_path, f) for f in os.listdir(audio_path) if f[-4:] in [
-                    '.wav', '.mp3', '.flac', '.ogg'] and not f.startswith('.')
+                os.path.join(audio_path, f)
+                for f in os.listdir(audio_path)
+                if os.path.splitext(f)[-1] in [".wav", ".mp3", ".flac", ".ogg"]
+                and not f.startswith(".")
             ]
             if len(self.audio_files) == 0:
-                return FileNotFoundError('No audio files found in directory.')
-        elif audio_path[-4:] in ['.wav', '.mp3', '.flac', '.ogg']:
+                return FileNotFoundError("No audio files found in directory.")
+        elif os.path.splitext(audio_path)[-1] in [".wav", ".mp3", ".flac", ".ogg"]:
             self.audio_files = [audio_path]
         else:
-            raise FileNotFoundError('Invalid audio file or directory.')
+            raise FileNotFoundError("Invalid audio file or directory.")
 
     # Helper to summarise features by utterance
-    def _summarise(self, features: np.ndarray) -> np.ndarray:
-        return np.concatenate((np.mean(features, axis=0), np.std(features, axis=0)), axis=0)
+    @staticmethod
+    def _summarise(features: np.ndarray) -> np.ndarray:
+        return np.concatenate(
+            (np.mean(features, axis=0), np.std(features, axis=0)), axis=0
+        )
 
     # Helpers for delta features
-    def _delta(self, mfccs: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _delta(mfccs: np.ndarray) -> np.ndarray:
         return librosa.feature.delta(mfccs)
 
-    def _delta_delta(self, mfccs: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _delta_delta(mfccs: np.ndarray) -> np.ndarray:
         return librosa.feature.delta(mfccs, order=2)
 
     # MFCCs
+    @staticmethod
     def mel_features(
-        self, audio: np.ndarray, sr: int, n_mfccs: int = 13, n_mels: int = 40,
-        win_length: float = 25.0, overlap: float = 10.0, fmin: float = 100.0,
-        fmax: float = 6000.0, preemphasis: float = 0.95, lifter: float = 22.0,
-        delta: bool = False, delta_delta: bool = False, summarise: bool = False
+        audio: np.ndarray,
+        sr: int,
+        n_mfccs: int = 13,
+        n_mels: int = 40,
+        win_length: float = 25.0,
+        overlap: float = 10.0,
+        fmin: float = 100.0,
+        fmax: float = 6000.0,
+        preemphasis: float = 0.95,
+        lifter: float = 22.0,
+        delta: bool = False,
+        delta_delta: bool = False,
+        summarise: bool = False,
     ) -> np.ndarray:
         """Extracts mfccs (and delta and delta-delta) from audio file.
 
@@ -173,121 +189,48 @@ class FeatureExtractor:
         # Raise warning if n_mfccs > n_mels
         if n_mfccs > n_mels:
             warnings.warn(
-                f'Number of MFCCs ({n_mfccs})is greater than number of Mel bands ({n_mels}). Setting n_mfccs to {n_mels}.')
+                f"Number of MFCCs ({n_mfccs}) is greater than number of "
+                + f"Mel bands ({n_mels}). Setting n_mfccs to {n_mels}."
+            )
             n_mfccs = n_mels
 
         # Extract mfccs
         features = librosa.feature.mfcc(
-            y=y, sr=sr, n_mfcc=n_mfccs, n_mels=n_mels, n_fft=n_fft,
-            hop_length=hop_length, fmin=fmin, fmax=fmax, lifter=lifter
+            y=y,
+            sr=sr,
+            n_mfcc=n_mfccs,
+            n_mels=n_mels,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            fmin=fmin,
+            fmax=fmax,
+            lifter=lifter,
         )
 
         # Extract delta features
         if delta and delta_delta:
             features = np.concatenate(
-                (features, self._delta(features), self._delta_delta(features)), axis=0)
+                (features, self._delta(features), self._delta_delta(features)), axis=0
+            )
         elif delta:
-            features = np.concatenate(
-                (features, self._delta(features)), axis=0)
+            features = np.concatenate((features, self._delta(features)), axis=0)
         elif delta_delta:
-            features = np.concatenate(
-                (features, self._delta_delta(features)), axis=0)
+            features = np.concatenate((features, self._delta_delta(features)), axis=0)
 
         # Summarise features by utterance
         if summarise:
-            features = self._summarise(features.T)
+            features = self._summarise(features.T)  # n_frames x n_features*2
         else:
             features = features.T  # n_frames x n_features
 
         # Return transposed features (n_frames x n_features)
         return features
 
-    # LPCCs
-    def lpc_features(
-        self, audio: np.ndarray, sr: int, n_lpccs: int = 13,
-        win_length: float = 25.0, overlap: float = 10.0, order: int = 26,
-        preemphasis: float = 0.95, summarise: bool = False
-    ) -> np.ndarray:
-        """Extracts lpccs from audio file.
-
-        Parameters
-        ----------
-        audio: np.ndarray
-            Audio signal.
-        sr: int
-            Sampling rate.
-        n_lpccs: int, optional
-            Number of lpccs to extract.
-        win_length: float, optional
-            Window length in milliseconds.
-        overlap: float, optional
-            Overlap in milliseconds.
-        order: int, optional
-            LPC order.
-        preemphasis: float, optional
-            Preemphasis coefficient.
-        summarise: bool, optional
-            Summarise features by utterance. Default is False.
-
-        Returns
-        -------
-        np.ndarray
-            LPCCs.
-            If summarise is True, returns a single vector per utterance containing
-            the mean and standard deviation of each feature.
-        """
-        # Preemphasis
-        y = librosa.effects.preemphasis(audio, coef=preemphasis)
-
-        # Warn if n_lpccs > order
-        if n_lpccs > order:
-            warnings.warn(
-                f'Number of LPCCs ({n_lpccs}) is greater than LPC order ({order}). Setting order to {n_lpccs}.')
-            order = n_lpccs
-
-        # Compute frame length and hop length
-        n_fft = int(sr * win_length / 1000)
-        hop_length = int(sr * overlap / 1000)
-
-        # Frame signal
-        frames = librosa.util.frame(
-            y, frame_length=n_fft, hop_length=hop_length)
-
-        # Windowing
-        windowed = frames * np.hamming(n_fft)[:, None]
-
-        # Check that num samples per frame < order
-        if windowed.shape[0] < order:
-            warnings.warn(
-                f'Number of samples per frame ({windowed.shape[0]}) is less than LPC order ({order}). Setting order to {windowed.shape[0]} - 1.')
-            order = windowed.shape[0] - 1
-
-            # Recheck n_lpccs
-            if n_lpccs > order:
-                warnings.warn(
-                    f'Number of LPCCs ({n_lpccs}) is greater than LPC order ({order}) but order was greater than number of samples per frame. Some LPCCs will be set to 0.')
-
-        # Compute LPCs
-        lpc = np.array([librosa.lpc(y=frame, order=order)
-                        for frame in windowed.T])
-
-        # LP spectrum
-        lp_spectrum = np.abs(np.fft.rfft(lpc, axis=1))
-
-        # Extract lpccs
-        features = np.fft.irfft(np.log(lp_spectrum), axis=1)[:, :n_lpccs]
-
-        # Summarise features by utterance
-        if summarise:
-            features = self._summarise(features)
-
-        # Return features (n_frames x n_features)
-        return features
-
     # Speaker embeddings
+    @staticmethod
     def speaker_embeddings(
-        self, audio: torch.Tensor,
-        model: str = 'speechbrain/spkrec-ecapa-voxceleb'
+        audio: torch.Tensor,
+        model: str = "speechbrain/spkrec-ecapa-voxceleb",
     ) -> np.ndarray:
         """Extracts speaker embeddings from audio files.
 
@@ -304,27 +247,30 @@ class FeatureExtractor:
             Speaker embeddings.
         """
         # Init pre-trained model
-        if not os.path.isdir('.pretrained_spkrec_models'):
-            os.mkdir('.pretrained_spkrec_models')
+        if not os.path.isdir(".pretrained_spkrec_models"):
+            os.mkdir(".pretrained_spkrec_models")
 
         # Load model
         classifier = EncoderClassifier.from_hparams(
-            source=model, savedir='.pretrained_spkrec_models')
+            source=model, savedir=".pretrained_spkrec_models"
+        )
 
         # Extract embeddings
-        embeddings = classifier.encode_batch(
-            wavs=audio)
+        embeddings = classifier.encode_batch(wavs=audio)
 
         # Reshape and transform to numpy
         embeddings = torch.reshape(
-            embeddings, shape=(embeddings.shape[1], embeddings.shape[-1])).numpy()
+            embeddings, shape=(embeddings.shape[1], embeddings.shape[-1])
+        ).numpy()
 
         return embeddings
 
     # Extract metadata features from filenames
+    @staticmethod
     def extract_metadata(
-        self, filename: str, variables: list = None,
-        split_char: str = '_'
+        filename: str,
+        variables: list = None,
+        split_char: str = "_",
     ) -> dict:
         """Extracts metadata features from audio filenames.
 
@@ -352,23 +298,21 @@ class FeatureExtractor:
         basename = os.path.basename(filename)
         # Split filename
         if variables is not None:
-            metadata_f = os.path.splitext(
-                basename)[0].split(split_char)
+            metadata_f = os.path.splitext(basename)[0].split(split_char)
 
             # Extract metadata
             for i, var in enumerate(variables):
-                if var != '-':
+                if var != "-":
                     metadata[var].append(metadata_f[i])
 
         # Extract filename
-        metadata['filename'].append(basename)
+        metadata["filename"].append(basename)
 
         return metadata
 
     # Add feature labels
-    def add_feature_labels(
-        self, feature_methods: dict
-    ) -> list:
+    @staticmethod
+    def add_feature_labels(feature_methods: dict) -> list:
         """Adds labels to feature methods.
 
         Parameters
@@ -386,40 +330,33 @@ class FeatureExtractor:
         # Add labels to feature methods
         feature_labels = []
         for method, args in feature_methods.items():
-            if method == 'mel_features':
-                tmp_feature_labels = [f'mfcc{i+1}' for i in range(
-                    args['n_mfccs'])]
-                if 'delta' in args and args['delta']:
+            if method == "mel_features":
+                tmp_feature_labels = [f"c{i + 1}" for i in range(args["n_mfccs"])]
+                if "delta" in args and args["delta"]:
                     tmp_feature_labels.extend(
-                        [f'delta{i+1}' for i in range(args['n_mfccs'])])
-                if 'delta_delta' in args and args['delta_delta']:
+                        [f"d{i + 1}" for i in range(args["n_mfccs"])]
+                    )
+                if "delta_delta" in args and args["delta_delta"]:
                     tmp_feature_labels.extend(
-                        [f'delta_delta{i+1}' for i in range(args['n_mfccs'])])
-                if 'summarise' in args and args['summarise']:
+                        [f"dd{i + 1}" for i in range(args["n_mfccs"])]
+                    )
+                if "summarise" in args and args["summarise"]:
                     feature_labels.extend(
-                        [f'{label}_mean' for label in tmp_feature_labels] +
-                        [f'{label}_std' for label in tmp_feature_labels])
+                        [f"{label}_mean" for label in tmp_feature_labels]
+                        + [f"{label}_std" for label in tmp_feature_labels]
+                    )
                 else:
                     feature_labels.extend(tmp_feature_labels)
-            elif method == 'lpc_features':
-                tmp_feature_labels = [f'lpcc{i+1}' for i in range(
-                    args['n_lpccs'])]
-                if 'summarise' in args and args['summarise']:
-                    feature_labels.extend(
-                        [f'{label}_mean' for label in tmp_feature_labels] +
-                        [f'{label}_std' for label in tmp_feature_labels])
-                else:
-                    feature_labels.extend(tmp_feature_labels)
-            elif method == 'speaker_embeddings':
-                feature_labels.extend(
-                    [f'spX{i+1}' for i in range(args['n_features'])])
+            elif method == "speaker_embeddings":
+                feature_labels.extend([f"X{i + 1}" for i in range(args["n_features"])])
             else:
-                raise ValueError('Invalid feature method.')
+                raise ValueError("Invalid feature method.")
 
         return feature_labels
 
     # Helper for loading audio files
-    def _load_audio(self, audio_file: str, method: str) -> Tuple[np.ndarray, int]:
+    @staticmethod
+    def _load_audio(audio_file: str, method: str) -> Tuple[np.ndarray, int]:
         """Loads audio file and returns audio signal and sampling rate.
 
         Parameters
@@ -427,21 +364,20 @@ class FeatureExtractor:
         audio_file: str
             Audio file path.
         method: str
-            Feature extraction method. Accepted methods are 'mel_features', 'lpc_features', and 'speaker_embeddings'.
+            Feature extraction method. Accepted methods are 'mel_features', and 'speaker_embeddings'.
 
         Returns
         -------
         Tuple[np.ndarray, int]
             Audio signal and sampling rate.
         """
-        if method in ['mel_features', 'lpc_features']:
+        if method == "mel_features":
             return librosa.load(audio_file, sr=None)
 
-        if method == 'speaker_embeddings':
+        if method == "speaker_embeddings":
             sig, sr = torchaudio.load(audio_file)
             if sr != 16000:  # resample to 16 kHz
-                sig = torchaudio.functional.resample(
-                    sig, orig_freq=sr, new_freq=16000)
+                sig = torchaudio.functional.resample(sig, orig_freq=sr, new_freq=16000)
             return sig, sr
 
     # Process sound files
@@ -461,23 +397,23 @@ class FeatureExtractor:
         """
         features = []
         metadata = defaultdict(list)
-        feature_labels = self.add_feature_labels(
-            feature_methods=self.feature_methods)
+        feature_labels = self.add_feature_labels(feature_methods=self.feature_methods)
 
         for f in self.audio_files:
             # Extract file metadata
-            if 'variables' in self.metavars and 'split_char' in self.metavars:
+            if "variables" in self.metavars and "split_char" in self.metavars:
                 metadata_f = self.extract_metadata(
-                    filename=f, variables=self.metavars['variables'],
-                    split_char=self.metavars['split_char']
+                    filename=f,
+                    variables=self.metavars["variables"],
+                    split_char=self.metavars["split_char"],
                 )
-            elif 'variables' in self.metavars:
+            elif "variables" in self.metavars:
                 metadata_f = self.extract_metadata(
-                    filename=f, variables=self.metavars['variables']
+                    filename=f, variables=self.metavars["variables"]
                 )
-            elif 'split_char' in self.metavars:
+            elif "split_char" in self.metavars:
                 metadata_f = self.extract_metadata(
-                    filename=f, split_char=self.metavars['split_char']
+                    filename=f, split_char=self.metavars["split_char"]
                 )
             else:
                 metadata_f = self.extract_metadata(filename=f)
@@ -486,15 +422,10 @@ class FeatureExtractor:
             features_f = []  # list of features for current file
             for method, args in self.feature_methods.items():
                 audio, sr = self._load_audio(audio_file=f, method=method)
-                if method == 'mel_features':
-                    features_f.append(
-                        self.mel_features(audio=audio, sr=sr, **args))
-                elif method == 'lpc_features':
-                    features_f.append(
-                        self.lpc_features(audio=audio, sr=sr, **args))
-                elif method == 'speaker_embeddings':
-                    features_f.append(
-                        self.speaker_embeddings(audio=audio, **args))
+                if method == "mel_features":
+                    features_f.append(self.mel_features(audio=audio, sr=sr, **args))
+                elif method == "speaker_embeddings":
+                    features_f.append(self.speaker_embeddings(audio=audio, **args))
 
             # Concatenate features of current file and append to features list
             features_f = np.concatenate(features_f, axis=0)
@@ -506,7 +437,7 @@ class FeatureExtractor:
             # Concatenate metadata of current file and append to metadata dict
             for key, value in metadata_f.items():
                 # make sure it matches the number of frames
-                metadata[key].extend(value*features_f.shape[0])
+                metadata[key].extend(value * features_f.shape[0])
 
         # Concatenate features
         features = np.concatenate(features, axis=0)
@@ -517,26 +448,29 @@ class FeatureExtractor:
 
 
 # Debugging
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Init for debugging
     fe = FeatureExtractor(
-        audio_path=os.path.join(os.path.dirname(
-            __file__), os.pardir, 'tests/data/'),
+        audio_path=os.path.join(os.path.dirname(__file__), os.pardir, "tests/data/"),
         feature_methods={
-            'mel_features': {'delta': True, 'summarise': True, 'n_mfccs': 10},
-            'lpc_features': {'n_lpccs': 5, 'summarise': True}
+            "mel_features": {"delta": True, "summarise": True, "n_mfccs": 10},
         },
-        metavars={}
+        metavars={},
     )
     audio, sr = librosa.load(
-        os.path.join(os.path.dirname(__file__), os.pardir, 'tests/data/sp01_sample1.wav'), sr=None)
+        os.path.join(
+            os.path.dirname(__file__), os.pardir, "test/data/sp01_sample1.wav"
+        ),
+        sr=None,
+    )
 
     # Debugging extract_metadata => OK
-    variables = ['speaker', '-', 'context']
-    split_char = '_'
-    test_filename = 'speaker1_2_context.wav'
+    variables = ["speaker", "-", "context"]
+    split_char = "_"
+    test_filename = "speaker1_2_context.wav"
     metadata = fe.extract_metadata(
-        filename=test_filename, variables=variables, split_char=split_char)
+        filename=test_filename, variables=variables, split_char=split_char
+    )
     print(dict(metadata))
 
     # # Debugging mel_features => OK
@@ -544,12 +478,6 @@ if __name__ == '__main__':
     #     audio=audio, sr=sr, summarise=True, n_mfccs=10, delta=True
     # )
     # print(mel_features.shape)
-
-    # # Debugging lpc_features
-    # lpc_features = fe.lpc_features(
-    #     audio=audio, sr=sr, n_lpccs=10, summarise=True
-    # )
-    # print(lpc_features.shape)
 
     # # Debugging speaker_embeddings
     # audio, sr = torchaudio.load(
