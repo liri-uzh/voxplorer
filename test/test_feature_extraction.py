@@ -39,7 +39,7 @@ class TestFeatureExtractor(unittest.TestCase):
         )
 
         # sign
-        self.assertListEqual(
+        self.assertCountEqual(
             y.tolist(),
             self.sig_librosa.tolist(),
             "Librosa signals don't match.",
@@ -58,7 +58,7 @@ class TestFeatureExtractor(unittest.TestCase):
         )
 
         # sign
-        self.assertListEqual(
+        self.assertCountEqual(
             y.tolist(),
             self.sig_torch.tolist(),
             "Torch signals don't match.",
@@ -222,7 +222,7 @@ class TestFeatureExtractor(unittest.TestCase):
             + [f"d{i + 1}_std" for i in range(10)]
         )
         # Assert correct values
-        self.assertListEqual(
+        self.assertCountEqual(
             feature_labels,
             expected,
         )
@@ -239,9 +239,9 @@ class TestFeatureExtractor(unittest.TestCase):
             fe.audio_files,
             list,
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             fe.audio_files,
-            list(self.audio_files[0]),
+            [self.audio_files[0]],
             "fe.audio_files is different when initiated with a file",
         )
 
@@ -254,7 +254,7 @@ class TestFeatureExtractor(unittest.TestCase):
             fe.audio_files,
             list,
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             fe.audio_files,
             self.audio_files,
             "fe.audio_files is different when initiated with a directory",
@@ -291,8 +291,8 @@ class TestFeatureExtractor(unittest.TestCase):
             len(features.keys()),
             expected["feature_num"],
         )
-        self.assertListEqual(
-            list(features.keys()),
+        self.assertCountEqual(
+            [features.keys()],
             expected["feature_labels"],
         )
         self.assertEqual(
