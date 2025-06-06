@@ -120,10 +120,10 @@ class TestFeatureExtractor(unittest.TestCase):
 
         # prep expected values
         # win_length - overlap (in samples)
-        wl = 0.025 * self.sr_librosa
-        step = (0.025 - 0.01) * self.sr_librosa
-        n_frames = ((self.sig_librosa.shape - wl) / step) + 1
-        n_frames = int(n_frames)
+        wl = int(0.025 * self.sr_librosa)
+        overlap = int(0.010 * self.sr_librosa)
+        step = int(wl - overlap)
+        n_frames = int((self.sig_librosa.shape[0] / step) + 1)
 
         # Assert correct type
         self.assertIsInstance(
@@ -172,7 +172,7 @@ class TestFeatureExtractor(unittest.TestCase):
         )
 
     def test_speaker_embeddings(self):
-        x = FeatureExtractor(
+        x = FeatureExtractor.speaker_embeddings(
             audio=self.sig_torch,
             model="speechbrain/spkrec-ecapa-voxceleb",
         )
@@ -187,12 +187,13 @@ class TestFeatureExtractor(unittest.TestCase):
         # Assert correct dimensions
         self.assertTupleEqual(
             x.shape,
-            (1, 392),
-            f"x has shape {x.shape} instead of (1, 392).",
+            (1, 192),
+            f"x has shape {x.shape} instead of (1, 192).",
         )
 
     def test_extract_metadata(self):
         expected = {
+            "filename": ["sp01_sample1.wav"],
             "speaker": ["sp01"],
             "sample": ["sample1"],
         }
@@ -263,7 +264,7 @@ class TestFeatureExtractor(unittest.TestCase):
     def test_process_files(self):
         fe = FeatureExtractor(
             audio_path=self.audio_path,
-            feature_mthods=self.feature_methods,
+            feature_methods=self.feature_methods,
             metavars=self.metavars,
         )
 
@@ -277,8 +278,18 @@ class TestFeatureExtractor(unittest.TestCase):
             + [f"d{i + 1}_std" for i in range(10)],
             "n_obs": 2,
             "metadata": {
-                "speaker": ["sp01", "sp02"],
-                "sample": ["sample1", "sample1"],
+                "filename": [
+                    "sp01_sample1.wav",
+                    "sp02_sample1.wav",
+                ],
+                "speaker": [
+                    "sp01",
+                    "sp02",
+                ],
+                "sample": [
+                    "sample1",
+                    "sample1",
+                ],
             },
         }
 
@@ -292,12 +303,12 @@ class TestFeatureExtractor(unittest.TestCase):
             expected["feature_num"],
         )
         self.assertCountEqual(
-            [features.keys()],
+            list(features.keys()),
             expected["feature_labels"],
         )
         self.assertEqual(
             len(features["c1_mean"]),
-            expexted["n_obs"],
+            expected["n_obs"],
         )
 
         # Check metadata
@@ -305,10 +316,12 @@ class TestFeatureExtractor(unittest.TestCase):
             metadata,
             dict,
         )
+        # TODO: sort list values first
         self.assertDictEqual(
             metadata,
             expected["metadata"],
         )
+        # TODO: add check for elements matching in position (i.e. filename -> speaker -> sample)
 
 
 if __name__ == "__main__":

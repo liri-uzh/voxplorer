@@ -184,7 +184,7 @@ class FeatureExtractor:
 
         # Compute frame length and hop length
         n_fft = int(sr * win_length / 1000)
-        hop_length = int(sr * overlap / 1000)
+        hop_length = int(sr * (win_length - overlap) / 1000)
 
         # Raise warning if n_mfccs > n_mels
         if n_mfccs > n_mels:
@@ -210,16 +210,31 @@ class FeatureExtractor:
         # Extract delta features
         if delta and delta_delta:
             features = np.concatenate(
-                (features, self._delta(features), self._delta_delta(features)), axis=0
+                (
+                    features,
+                    FeatureExtractor._delta(features),
+                    FeatureExtractor._delta_delta(features),
+                ),
+                axis=0,
             )
         elif delta:
-            features = np.concatenate((features, self._delta(features)), axis=0)
+            features = np.concatenate(
+                (
+                    features,
+                    FeatureExtractor._delta(features),
+                ),
+                axis=0,
+            )
         elif delta_delta:
-            features = np.concatenate((features, self._delta_delta(features)), axis=0)
+            features = np.concatenate(
+                (features, FeatureExtractor._delta_delta(features)), axis=0
+            )
 
         # Summarise features by utterance
         if summarise:
-            features = self._summarise(features.T)  # n_frames x n_features*2
+            features = FeatureExtractor._summarise(
+                features.T
+            )  # n_frames x n_features*2
         else:
             features = features.T  # n_frames x n_features
 
@@ -397,35 +412,41 @@ class FeatureExtractor:
         """
         features = []
         metadata = defaultdict(list)
-        feature_labels = self.add_feature_labels(feature_methods=self.feature_methods)
+        feature_labels = FeatureExtractor.add_feature_labels(
+            feature_methods=self.feature_methods
+        )
 
         for f in self.audio_files:
             # Extract file metadata
             if "variables" in self.metavars and "split_char" in self.metavars:
-                metadata_f = self.extract_metadata(
+                metadata_f = FeatureExtractor.extract_metadata(
                     filename=f,
                     variables=self.metavars["variables"],
                     split_char=self.metavars["split_char"],
                 )
             elif "variables" in self.metavars:
-                metadata_f = self.extract_metadata(
+                metadata_f = FeatureExtractor.extract_metadata(
                     filename=f, variables=self.metavars["variables"]
                 )
             elif "split_char" in self.metavars:
-                metadata_f = self.extract_metadata(
+                metadata_f = FeatureExtractor.extract_metadata(
                     filename=f, split_char=self.metavars["split_char"]
                 )
             else:
-                metadata_f = self.extract_metadata(filename=f)
+                metadata_f = FeatureExtractor.extract_metadata(filename=f)
 
             # Extract features
             features_f = []  # list of features for current file
             for method, args in self.feature_methods.items():
-                audio, sr = self._load_audio(audio_file=f, method=method)
+                audio, sr = FeatureExtractor._load_audio(audio_file=f, method=method)
                 if method == "mel_features":
-                    features_f.append(self.mel_features(audio=audio, sr=sr, **args))
+                    features_f.append(
+                        FeatureExtractor.mel_features(audio=audio, sr=sr, **args)
+                    )
                 elif method == "speaker_embeddings":
-                    features_f.append(self.speaker_embeddings(audio=audio, **args))
+                    features_f.append(
+                        FeatureExtractor.speaker_embeddings(audio=audio, **args)
+                    )
 
             # Concatenate features of current file and append to features list
             features_f = np.concatenate(features_f, axis=0)
