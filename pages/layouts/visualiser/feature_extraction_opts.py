@@ -195,7 +195,8 @@ mel_opts = [
                         label="summarise",
                         value=False,
                     ),
-                    dbc.FormText("Summarise to mean and std. all frames of a file"),
+                    dbc.FormText(
+                        "Summarise to mean and std. all frames of a file"),
                 ]
             ),
         ]
@@ -309,7 +310,13 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
             form_elements = sp_emb_opts
         else:
             return (
-                [dbc.Alert("Error loading feature extraction options", color="danger")],
+                [
+                    dbc.Alert(
+                        "Error loading feature extraction options",
+                        color="danger",
+                        dismissable=True,
+                    )
+                ],
                 True,
             )
 

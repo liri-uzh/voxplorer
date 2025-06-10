@@ -138,7 +138,8 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
 
         return (
             dbc.Card(
-                dbc.CardBody(html.Div(interactive_table, style={"width": "100%"})),
+                dbc.CardBody(html.Div(interactive_table,
+                             style={"width": "100%"})),
                 className="mt-4",
             ),
             {"display": "block"},
@@ -151,6 +152,7 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
             dbc.Alert(
                 f"Error creating interactive table: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -201,7 +203,8 @@ def select_deselect_all(
             else:
                 return (selected_data,)
     elif trigger_id == "select-all-btn":
-        to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
+        to_select = [i for i, row in enumerate(
+            original_rows) if row in filtered_rows]
         return (to_select,)
     elif trigger_id == "deselect-all-btn":
         return ([],)
@@ -233,6 +236,7 @@ def download_all(n_clicks, data_table):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
@@ -267,17 +271,20 @@ def download_selected(n_clicks, data_table, selectedobservations):
                 dbc.Alert(
                     "No observations selected",
                     color="warning",
+                    dismissable=True,
                 ),
             )
         else:
             df = df.iloc[selectedobservations]
-            to_download = dcc.send_data_frame(df.to_csv, "selected_data_table.csv")
+            to_download = dcc.send_data_frame(
+                df.to_csv, "selected_data_table.csv")
     except Exception as e:
         return (
             None,
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 

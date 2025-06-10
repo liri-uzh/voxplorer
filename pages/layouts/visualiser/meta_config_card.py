@@ -91,7 +91,13 @@ def store_meta_info(n_clicks, meta_columns):
     if n_clicks > 0:
         return (
             meta_columns,
-            [dbc.Alert("Selection confirmed", color="success")],
+            [
+                dbc.Alert(
+                    "Selection confirmed",
+                    color="success",
+                    dismissable=True,
+                )
+            ],
         )
     else:
         PreventUpdate

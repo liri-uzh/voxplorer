@@ -2,6 +2,7 @@
 # Visualiser mode #
 ###################
 
+import os
 import dash
 from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
@@ -9,7 +10,7 @@ import dash_bootstrap_components as dbc
 
 
 # local imports
-from lib.data_loader import parse_contents
+from lib.data_loader import parse_table_contents
 from pages.layouts.visualiser import (
     meta_config_card,
     feature_extraction_opts,
@@ -44,7 +45,8 @@ layout_storage = html.Div(
 upload_sel_layout = dbc.Row(
     dbc.Card(
         [
-            dbc.CardHeader(html.H4("Upload pre-computed table or feature extraction?")),
+            dbc.CardHeader(
+                html.H4("Upload pre-computed table or feature extraction?")),
             dbc.CardBody(
                 dbc.Row(
                     [
@@ -220,12 +222,16 @@ def upload_choice(n_clicks_table, n_clicks_audio):
 def upload_table(contents, filename):
     if contents is not None and filename is not None:
         # parse uploaded contents
-        data_table, alert_msg = parse_contents(contents, filename, "table")
+        data_table, alert_msg = parse_table_contents(contents, filename)
 
         # manage returns
         if data_table is not None:
             return (
-                dbc.Alert(f"{filename} uploaded successfully.", color="success"),
+                dbc.Alert(
+                    f"{filename} uploaded successfully.",
+                    color="success",
+                    dismissable=True,
+                ),
                 data_table,
                 {"display": "block"},
             )
@@ -256,8 +262,28 @@ def display_feature_extraction_opts(filenames):
     if not filenames:
         raise PreventUpdate
 
+    # Check that all .wav files
+    for fl in filenames:
+        if (
+            not os.path.splitext(fl)[-1].lower()
+            in feature_extraction_opts.supported_filetypes
+        ):
+            return (
+                dbc.Alert(
+                    f"{fl} filetype is not supported."
+                    "\nSupported filetypes are: "
+                    + f"{', '.join(feature_extraction_opts.supported_filetypes)}",
+                    color="danger",
+                ),
+                {"display": "none"},
+            )
+
     return (
-        dbc.Alert(f"{len(filenames)} files uploaded", color="success"),
+        dbc.Alert(
+            f"{len(filenames)} files uploaded",
+            color="success",
+            dismissable=True,
+        ),
         {"display": "block"},
     )
 
@@ -300,7 +326,8 @@ def sync_table_and_plot(
     elif trigger_id == "plot":
         if plot_selected_data:
             print(plot_selected_data)
-            plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
+            plot_selected_rows = [p["pointIndex"]
+                                  for p in plot_selected_data["points"]]
             if selected_data and set(selected_data) == set(plot_selected_rows):
                 raise PreventUpdate
             else:

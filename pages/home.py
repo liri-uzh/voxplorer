@@ -45,16 +45,24 @@ layout = dbc.Container(
                                     ),
                                     width=6,
                                 ),
+                                # dbc.Col(
+                                #     dbc.Button(
+                                #         "Go to Recogniser",
+                                #         id="go-to-recogniser-btn",
+                                #         href="/recogniser",
+                                #         color="primary",
+                                #         style={
+                                #             "margin-top": "10px",
+                                #             "display": "block",
+                                #         },
+                                #     ),
+                                #     width=6,
+                                # ),
+                                # NOTE: placeholder
                                 dbc.Col(
-                                    dbc.Button(
-                                        "Go to Recogniser",
-                                        id="go-to-recogniser-btn",
-                                        href="/recogniser",
-                                        color="primary",
-                                        style={
-                                            "margin-top": "10px",
-                                            "display": "block",
-                                        },
+                                    dbc.Alert(
+                                        "Recogniser is coming soon",
+                                        color="info",
                                     ),
                                     width=6,
                                 ),

@@ -121,7 +121,8 @@ def _make_styling_dropdowns(
     """
     options = [{"label": "", "value": None}]
     if metavars:
-        options += [{"label": metavar, "value": metavar} for metavar in metavars]
+        options += [{"label": metavar, "value": metavar}
+                    for metavar in metavars]
 
     return dbc.Select(
         id=id,
@@ -384,6 +385,7 @@ def run_dim_reduction(
             dbc.Alert(
                 f"Error while parsing algorithm parameters: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -419,7 +421,8 @@ def run_dim_reduction(
                 **parsed_kwargs,
             )
         else:
-            raise ValueError("Unknown dimensionality reduction algorithm specified.")
+            raise ValueError(
+                "Unknown dimensionality reduction algorithm specified.")
 
     except Exception as e:
         return (
@@ -427,6 +430,7 @@ def run_dim_reduction(
             dbc.Alert(
                 f"Error during dimensionality reduction: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -441,6 +445,7 @@ def run_dim_reduction(
             dbc.Alert(
                 f"Error combining metavars to reduced features: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -453,6 +458,7 @@ def run_dim_reduction(
             + f"{X.shape[1]} to {n_components} dimensions"
             + f" using {algorithm.upper()}",
             color="success",
+            dismissable=True,
         ),
         {"display": "block"},
         {"display": "block"},
@@ -614,6 +620,7 @@ def plot_update(
             dbc.Alert(
                 f"Error creating figure: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
@@ -641,7 +648,8 @@ def plot_update(
             else:
                 print("from plot callback - selected data:", selected_data)
                 fig.update_traces(
-                    selectedpoints=selected_data if len(selected_data) > 0 else None,
+                    selectedpoints=selected_data if len(
+                        selected_data) > 0 else None,
                 )
     # Set default dragmode
     fig.update_layout(
@@ -678,6 +686,7 @@ def download_all_redueced(n_clicks, data_table):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
@@ -712,6 +721,7 @@ def download_selected_reduced(n_clicks, data_table, selectedobservations):
                 dbc.Alert(
                     "No observations selected",
                     color="warning",
+                    dismissable=True,
                 ),
             )
         else:
@@ -725,6 +735,7 @@ def download_selected_reduced(n_clicks, data_table, selectedobservations):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 

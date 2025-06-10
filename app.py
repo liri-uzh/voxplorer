@@ -22,14 +22,15 @@ navbar = dbc.NavbarSimple(
                         active="partial",
                     )
                 ),
-                dbc.NavItem(
-                    dbc.NavLink(
-                        "Recogniser",
-                        href="/recogniser",
-                        id="recogniser-link",
-                        active="partial",
-                    )
-                ),
+                # TODO: Uncomment this when Recogniser is ready
+                # dbc.NavItem(
+                #     dbc.NavLink(
+                #         "Recogniser",
+                #         href="/recogniser",
+                #         id="recogniser-link",
+                #         active="partial",
+                #     )
+                # ),
             ],
             pills=True,
             navbar=True,
