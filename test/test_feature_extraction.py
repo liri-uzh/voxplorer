@@ -11,7 +11,7 @@ class TestFeatureExtractor(unittest.TestCase):
         self.audio_path = os.path.join(os.path.dirname(__file__), "data/")
         self.audio_files = [
             os.path.join(self.audio_path, "sp01_sample1.wav"),
-            os.path.join(self.audio_path, "sp02_sample1.wav"),
+            os.path.join(self.audio_path, "sp02_sample2.wav"),
         ]
         self.metavars = {
             "variables": ["speaker", "sample"],
@@ -277,20 +277,29 @@ class TestFeatureExtractor(unittest.TestCase):
             + [f"c{i + 1}_std" for i in range(10)]
             + [f"d{i + 1}_std" for i in range(10)],
             "n_obs": 2,
-            "metadata": {
-                "filename": [
+        }
+        combined_metadata = list(
+            zip(
+                [
                     "sp01_sample1.wav",
-                    "sp02_sample1.wav",
+                    "sp02_sample2.wav",
                 ],
-                "speaker": [
+                [
                     "sp01",
                     "sp02",
                 ],
-                "sample": [
+                [
                     "sample1",
-                    "sample1",
+                    "sample2",
                 ],
-            },
+            )
+        )
+        combined_metadata.sort(key=lambda x: x[0])
+        sorted_filenames, sorted_speakers, sorted_samples = zip(*combined_metadata)
+        expected["metadata"] = {
+            "filename": list(sorted_filenames),
+            "speaker": list(sorted_speakers),
+            "sample": list(sorted_samples),
         }
 
         # Check features
@@ -316,12 +325,36 @@ class TestFeatureExtractor(unittest.TestCase):
             metadata,
             dict,
         )
-        # TODO: sort list values first
+        combined_metadata = list(
+            zip(
+                metadata["filename"],
+                metadata["speaker"],
+                metadata["sample"],
+            )
+        )
+        combined_metadata.sort(key=lambda x: x[0])
+        sorted_filenames, sorted_speakers, sorted_samples = zip(*combined_metadata)
+        metadata_sorted = {
+            "filename": list(sorted_filenames),
+            "speaker": list(sorted_speakers),
+            "sample": list(sorted_samples),
+        }
         self.assertDictEqual(
-            metadata,
+            metadata_sorted,
             expected["metadata"],
         )
-        # TODO: add check for elements matching in position (i.e. filename -> speaker -> sample)
+        # Check for elements matching in position
+        for i, f in enumerate(metadata["filename"]):
+            self.assertIn(
+                metadata["speaker"][i],
+                f,
+                f"Speaker {metadata['speaker'][i]} does not match file {f} at index {i}",
+            )
+            self.assertIn(
+                metadata["sample"][i],
+                f,
+                f"Sample {metadata['sample'][i]} does not match file {f} at index {i}",
+            )
 
 
 if __name__ == "__main__":
