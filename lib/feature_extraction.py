@@ -6,15 +6,18 @@ FeatureExtractor
     Class to extract acoustic features from audio files.
 """
 
-from collections import defaultdict
-from typing import Tuple
+import base64
+import io
 import os
 import warnings
-import numpy as np
+from collections import defaultdict
+from typing import Tuple
+
 import librosa
-from speechbrain.inference.classifiers import EncoderClassifier
+import numpy as np
 import torch
 import torchaudio
+from speechbrain.inference.classifiers import EncoderClassifier
 
 
 class FeatureExtractor:
@@ -22,8 +25,10 @@ class FeatureExtractor:
 
     Parameters
     ----------
-    audio_path: str
-        Path to directory containing audio files or a single audio file.
+    filenames : list[str]
+        Filenames of audio files.
+    filebytes : list[str]
+        Contents of audio files. E.g. 'data:audio/wav;base64,XXXXXXX...'.
     feature_methods: dict
         Dictionary containing feature methods. Keys are the method names,
         values are the arguments passed to the method. Accepted methods are
@@ -47,8 +52,10 @@ class FeatureExtractor:
 
     Attributes
         ----------
-        audio_files: list
-            List of audio files.
+        filenames: list[str]
+            Audio filenames.
+        decoded_files: list[io.BufferedIOBase]
+            Decoded file bytes.
         feature_methods: dict
             Dictionary containing feature methods.
         metavars: dict
@@ -71,7 +78,8 @@ class FeatureExtractor:
 
     def __init__(
         self,
-        audio_path: str,
+        filenames: list,
+        filebytes: list,
         feature_methods: dict,
         metavars: dict = {"variables": None, "split_char": "_"},
     ) -> None:
@@ -79,34 +87,65 @@ class FeatureExtractor:
 
         Parameters
         ----------
-        audio_path: str
-            Path to directory containing audio files or a single audio file.
-        feature_methods: dict
+        filenames : list[str]
+            Filenames of audio files.
+        filebytes : list[str]
+            Contents of audio files. E.g. 'data:audio/wav;base64,XXXXXXX...'.
+        feature_methods : dict
             Dictionary containing feature methods. Keys are the method names,
             values are the arguments passed to the method. Accepted methods are
             'mel_features', and 'speaker_embeddings'.
-        metavars: dict, optional
+        metavars : dict, optional
             Dictionary containing metadata variables to extract. They should have the same
             index as the variable in the filename split by `split_char`. If '-'
             then that variable is ignored. If None, returns only the filename.
             Default is None.
         """
+        if len(filenames) != len(filebytes):
+            raise ValueError(
+                "`filenames` and `filebytes` must have the same length;\n"
+                + f"got {len(filenames)} and {len(filebytes)}"
+            )
+
         self.feature_methods = feature_methods
         self.metavars = metavars
 
-        if os.path.isdir(audio_path):
-            self.audio_files = [
-                os.path.join(audio_path, f)
-                for f in os.listdir(audio_path)
-                if os.path.splitext(f)[-1] in [".wav", ".mp3", ".flac", ".ogg"]
-                and not f.startswith(".")
-            ]
-            if len(self.audio_files) == 0:
-                return FileNotFoundError("No audio files found in directory.")
-        elif os.path.splitext(audio_path)[-1] in [".wav", ".mp3", ".flac", ".ogg"]:
-            self.audio_files = [audio_path]
-        else:
-            raise FileNotFoundError("Invalid audio file or directory.")
+        # Validate files
+        try:
+            FeatureExtractor._validate_files(filenames)
+            self.filenames = filenames
+        except Exception as e:
+            raise e
+
+        # Decode filebytes
+        try:
+            self.decoded_files = FeatureExtractor._decode_filebytes(filebytes)
+        except Exception as e:
+            raise e
+
+    @staticmethod
+    def _validate_files(filenames: list):
+        ALLOWED_EXTENSIONS = {".wav", ".mp3", ".flac"}
+        bad_files = [
+            fn
+            for fn in filenames
+            if os.path.splitext(fn)[-1].lower() not in ALLOWED_EXTENSIONS
+        ]
+        if bad_files:
+            raise ValueError(
+                f"Found {len(bad_files)} with unsupported extensions.\n"
+                + f"Only {ALLOWED_EXTENSIONS} are supported."
+            )
+
+    @staticmethod
+    def _decode_filebytes(filebytes: list):
+        decoded_files = []
+        for fb in filebytes:
+            header, b64 = fb.split(",", 1)
+            audio_bytes = base64.b64decode(b64)
+            decoded_files.append(io.BytesIO(audio_bytes))
+
+        return decoded_files
 
     # Helper to summarise features by utterance
     @staticmethod
@@ -377,7 +416,7 @@ class FeatureExtractor:
         Parameters
         ----------
         audio_file: str
-            Audio file path.
+            Audio file decoded bytes.
         method: str
             Feature extraction method. Accepted methods are 'mel_features', and 'speaker_embeddings'.
 
@@ -416,29 +455,31 @@ class FeatureExtractor:
             feature_methods=self.feature_methods
         )
 
-        for f in self.audio_files:
+        for fn, fb in zip(self.filenames, self.decoded_files):
             # Extract file metadata
             if "variables" in self.metavars and "split_char" in self.metavars:
                 metadata_f = FeatureExtractor.extract_metadata(
-                    filename=f,
+                    filename=fn,
                     variables=self.metavars["variables"],
                     split_char=self.metavars["split_char"],
                 )
             elif "variables" in self.metavars:
                 metadata_f = FeatureExtractor.extract_metadata(
-                    filename=f, variables=self.metavars["variables"]
+                    filename=fn,
+                    variables=self.metavars["variables"],
                 )
             elif "split_char" in self.metavars:
                 metadata_f = FeatureExtractor.extract_metadata(
-                    filename=f, split_char=self.metavars["split_char"]
+                    filename=fn,
+                    split_char=self.metavars["split_char"],
                 )
             else:
-                metadata_f = FeatureExtractor.extract_metadata(filename=f)
+                metadata_f = FeatureExtractor.extract_metadata(filename=fn)
 
             # Extract features
             features_f = []  # list of features for current file
             for method, args in self.feature_methods.items():
-                audio, sr = FeatureExtractor._load_audio(audio_file=f, method=method)
+                audio, sr = FeatureExtractor._load_audio(audio_file=fb, method=method)
                 if method == "mel_features":
                     features_f.append(
                         FeatureExtractor.mel_features(audio=audio, sr=sr, **args)

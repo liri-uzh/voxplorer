@@ -74,19 +74,9 @@ def parse_audio_contents(
     contents: list,
     feature_extraction_args: dict,
 ) -> tuple:
-    # Check extensions
-    bad_files = [
-        fn
-        for fn in filenames
-        if not os.path.splitext(fn)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO
-    ]
-    if bad_files:
-        return None, dbc.Alert(
-            f"Found {len(bad_files)} with unsupported extensions.\n"
-            + f"Only {ALLOWED_EXTENSIONS_AUDIO} are supported.",
-            color="danger",
-            dismissable=True,
-        )
+    # INIT FEATURE EXTRACTOR
+    # Decode signals
+
     # TODO: check file types and return dbc.Alert in case extension not supported
 
     # TODO: process contents in order to work with librosa (MFCCs) and/or torchaudio (speaker embeddings)

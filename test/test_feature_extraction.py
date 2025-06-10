@@ -1,17 +1,21 @@
+import base64
+import io
 import os
 import unittest
+
 import librosa
 import numpy as np
 import torchaudio
+
 from lib.feature_extraction import FeatureExtractor
 
 
 class TestFeatureExtractor(unittest.TestCase):
     def setUp(self):
-        self.audio_path = os.path.join(os.path.dirname(__file__), "data/")
-        self.audio_files = [
-            os.path.join(self.audio_path, "sp01_sample1.wav"),
-            os.path.join(self.audio_path, "sp02_sample2.wav"),
+        audio_path = os.path.join(os.path.dirname(__file__), "data/")
+        self.filenames = [
+            os.path.join(audio_path, "sp01_sample1.wav"),
+            os.path.join(audio_path, "sp02_sample2.wav"),
         ]
         self.metavars = {
             "variables": ["speaker", "sample"],
@@ -25,16 +29,36 @@ class TestFeatureExtractor(unittest.TestCase):
                 "summarise": True,
             }
         }
+        self.filebytes = []
+        for fn in self.filenames:
+            with open(fn, "rb") as fb:
+                data = fb.read()
+                self.filebytes.append(base64.b64encode(data).decode("ascii"))
+        self.decoded_files = []
+        for fb in self.filebytes:
+            header, b64 = fb.split(",", 1)
+            audio_bytes = base64.b64decode(b64)
+            self.decoded_files.append(io.BytesIO(audio_bytes))
         self.sig_librosa, self.sr_librosa = librosa.load(
-            self.audio_files[0],
+            os.path.join(
+                os.path.dirname(__file__),
+                "data",
+                self.filenames[0],
+            ),
             sr=None,
         )
-        self.sig_torch, self.sr_torch = torchaudio.load(self.audio_files[0])
+        self.sig_torch, self.sr_torch = torchaudio.load(
+            os.path.join(
+                os.path.dirname(__file__),
+                "data",
+                self.filenames[0],
+            )
+        )
 
     def test_load_audio(self):
         # Test audio load for MFCCs/LPCCs
         y, sr = FeatureExtractor._load_audio(
-            audio_file=self.audio_files[0],
+            audio_file=self.decoded_files[0],
             method="mel_features",
         )
 
@@ -53,7 +77,7 @@ class TestFeatureExtractor(unittest.TestCase):
 
         # Test audio load for torch
         y, sr = FeatureExtractor._load_audio(
-            audio_file=self.audio_files[0],
+            audio_file=self.decoded_files[0],
             method="speaker_embeddings",
         )
 
@@ -231,39 +255,50 @@ class TestFeatureExtractor(unittest.TestCase):
     def test_FeatureExtractor(self):
         # Test init is correct
         fe = FeatureExtractor(
-            audio_path=self.audio_files[0],
+            filenames=self.filenames,
+            filebytes=self.filebytes,
             feature_methods=self.feature_methods,
             metavars=self.metavars,
         )
 
         self.assertIsInstance(
-            fe.audio_files,
+            fe.filenames,
             list,
-        )
-        self.assertCountEqual(
-            fe.audio_files,
-            [self.audio_files[0]],
-            "fe.audio_files is different when initiated with a file",
-        )
-
-        fe = FeatureExtractor(
-            audio_path=self.audio_path,
-            feature_methods=self.feature_methods,
-            metavars=self.metavars,
         )
         self.assertIsInstance(
-            fe.audio_files,
+            fe.decoded_files,
             list,
         )
+
         self.assertCountEqual(
-            fe.audio_files,
-            self.audio_files,
-            "fe.audio_files is different when initiated with a directory",
+            fe.filenames,
+            self.filenames,
+            "fe.filenames is different",
         )
+        self.assertCountEqual(
+            fe.decoded_files, self.decoded_files, "fe.decoded_files is different"
+        )
+
+        # Test exceptions
+        with self.assertRaises(ValueError):
+            fe = FeatureExtractor(
+                filenames=["only1"],
+                filebytes=self.filebytes,
+                feature_methods=self.feature_methods,
+                metavars=self.metavars,
+            )
+        with self.assertRaises(ValueError):
+            fe = FeatureExtractor(
+                filenames=["error.ogg", "error.txt"],
+                filebytes=self.filebytes,
+                feature_methods=self.feature_methods,
+                metavars=self.metavars,
+            )
 
     def test_process_files(self):
         fe = FeatureExtractor(
-            audio_path=self.audio_path,
+            filenames=self.filenames,
+            filebytes=self.filebytes,
             feature_methods=self.feature_methods,
             metavars=self.metavars,
         )
@@ -348,7 +383,9 @@ class TestFeatureExtractor(unittest.TestCase):
             self.assertIn(
                 metadata["speaker"][i],
                 f,
-                f"Speaker {metadata['speaker'][i]} does not match file {f} at index {i}",
+                f"Speaker {metadata['speaker'][i]} does not match file {f} at index {
+                    i
+                }",
             )
             self.assertIn(
                 metadata["sample"][i],
