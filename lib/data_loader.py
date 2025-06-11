@@ -9,20 +9,6 @@ ALLOWED_EXTENSIONS_AUDIO = {".wav", ".mp3", ".flac"}
 
 
 def parse_table_contents(contents, filename):
-    """Load data from a database table.
-
-    Parameters
-    ----------
-    contents
-        The parsed content.
-    filename
-        The filename.
-
-    Returns
-    -------
-    data_table : pandas.DataFrame | None
-        Data from the table or None.
-    """
     contents_type, content_string = contents.split(",")
 
     # decode contents
@@ -35,7 +21,7 @@ def parse_table_contents(contents, filename):
         ext = os.path.splitext(filename)[-1]
         if ext == ".csv":
             data_table = pl.read_csv(file_stream)
-        elif ext == "tsv":
+        elif ext == ".tsv":
             data_table = pl.read_csv(file_stream, separator="\t")
         elif ext in (".xls", ".xlsb", ".xlsx"):
             data_table = pl.read_excel(file_stream)
@@ -50,11 +36,13 @@ def parse_table_contents(contents, filename):
             return None, dbc.Alert(
                 decode_exception,
                 color="danger",
+                dismissable=True,
             )
     except Exception as e:
         return None, dbc.Alert(
             f"There was an error processing file {filename}: {e}",
             color="danger",
+            dismissable=True,
         )
 
     # Make JSON serialisable
@@ -64,22 +52,61 @@ def parse_table_contents(contents, filename):
         return None, dbc.Alert(
             f"{filename} loaded successfully, but failed to make JSON serializable: {e}",
             color="danger",
+            dismissable=True,
         )
 
     return data_table, None
 
 
 def parse_audio_contents(
-    filenames: list,
     contents: list,
+    filenames: list,
     feature_extraction_args: dict,
+    metavars: dict,
 ) -> tuple:
-    # INIT FEATURE EXTRACTOR
-    # Decode signals
+    try:
+        # Initialise feature extractor
+        fe = FeatureExtractor(
+            filenames=filenames,
+            filebytes=contents,
+            feature_methods=feature_extraction_args,
+            metavars=metavars,
+        )
+    except Exception as e:
+        return None, dbc.Alert(
+            e,
+            color="danger",
+            dismissable=True,
+        )
 
-    # TODO: check file types and return dbc.Alert in case extension not supported
+    # Process the files
+    try:
+        features, metadata = fe.process_files()
+    except Exception as e:
+        return None, dbc.Alert(
+            f"Error extracting features: {e}",
+            color="danger",
+            dismissable=True,
+        )
 
-    # TODO: process contents in order to work with librosa (MFCCs) and/or torchaudio (speaker embeddings)
+    # process metavariables and features in table
+    try:
+        data_table = pl.DataFrame(metadata | features)
+    except Exception as e:
+        dbc.Alert(
+            f"Error while creating features table: {e}",
+            color="danger",
+            dismissable=True,
+        )
 
-    # TODO: send processed contents and filenames to FeatureExtractor
-    pass
+    # Make JSON serialisable
+    try:
+        data_table = data_table.to_dicts()
+    except Exception as e:
+        return None, dbc.Alert(
+            f"Failed to make JSON serializable: {e}",
+            color="danger",
+            dismissable=True,
+        )
+
+    return data_table, None
