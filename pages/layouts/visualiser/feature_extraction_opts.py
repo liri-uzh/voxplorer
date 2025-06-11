@@ -195,8 +195,7 @@ mel_opts = [
                         label="summarise",
                         value=False,
                     ),
-                    dbc.FormText(
-                        "Summarise to mean and std. all frames of a file"),
+                    dbc.FormText("Summarise to mean and std. all frames of a file"),
                 ]
             ),
         ]
@@ -226,8 +225,8 @@ sp_emb_opts = [
 ]
 
 
-# --- Main layout ---
-layout = dbc.Row(
+# --- Feature extraction card ---
+feature_extraction_card = (
     dbc.Card(
         [
             dbc.CardHeader(html.H4("Specify feature extraction")),
@@ -257,20 +256,54 @@ layout = dbc.Row(
                         n_intervals=0,
                         disabled=True,
                     ),
-                    dbc.Button(
-                        "Extract features",
-                        id="extract-features-btn",
-                        color="primary",
-                        className="w-100 mb-3",
-                    ),
-                    html.Div(
-                        id="feature-extraction-output",
-                        className="w-100 mt-3",
-                    ),
                 ]
             ),
         ]
     ),
+)
+
+metavars_card = (
+    dbc.Card(
+        [
+            dbc.CardHeader(html.H4("Specify how to extract metadata")),
+            dbc.CardBody(
+                [
+                    dbc.FormText(
+                        "Specify the separator character and then name"
+                        + " the metadata variables.\n"
+                        + "Use '-' to specify variables which should be ignored."
+                    ),
+                    dbc.Col(
+                        html.Label(
+                            "Example file:",
+                            id="example-file-label",
+                        ),
+                        width=2,
+                    ),
+                    dbc.Col(html.Div(id="token-naming-container")),
+                ],
+            ),
+        ],
+        className="mb-3",
+    ),
+)
+
+# --- Main layout ---
+layout = dbc.Row(
+    [
+        feature_extraction_card[0],
+        metavars_card[0],
+        dbc.Button(
+            "Extract features",
+            id="extract-features-btn",
+            color="primary",
+            className="w-100 mb-3",
+        ),
+        html.Div(
+            id="feature-extraction-output",
+            className="w-100 mt-3",
+        ),
+    ],
     style={"display": "none"},
     id="feature-extraction-opts-card",
 )
@@ -321,3 +354,12 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
             )
 
     return form_elements, True
+
+
+# TODO: --- Callback 2: metavars interactive specification ---
+
+
+# TODO: --- helper for callback 3: process feature methods and metavars ---
+
+
+# TODO: --- Callback 3: feature extraction ---

@@ -10,7 +10,11 @@ import dash_bootstrap_components as dbc
 
 
 # local imports
-from lib.data_loader import parse_table_contents
+from lib.data_loader import (
+    parse_table_contents,
+    parse_audio_contents,
+    ALLOWED_EXTENSIONS_AUDIO,
+)
 from pages.layouts.visualiser import (
     meta_config_card,
     feature_extraction_opts,
@@ -45,8 +49,7 @@ layout_storage = html.Div(
 upload_sel_layout = dbc.Row(
     dbc.Card(
         [
-            dbc.CardHeader(
-                html.H4("Upload pre-computed table or feature extraction?")),
+            dbc.CardHeader(html.H4("Upload pre-computed table or feature extraction?")),
             dbc.CardBody(
                 dbc.Row(
                     [
@@ -253,6 +256,7 @@ def upload_table(contents, filename):
     [
         Output("audio-output", "children"),
         Output("feature-extraction-opts-card", "style"),
+        Output("example-file-label", "children"),
     ],
     [
         Input("upload-audio", "filename"),
@@ -264,18 +268,17 @@ def display_feature_extraction_opts(filenames):
 
     # Check that all .wav files
     for fl in filenames:
-        if (
-            not os.path.splitext(fl)[-1].lower()
-            in feature_extraction_opts.supported_filetypes
-        ):
+        if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
             return (
                 dbc.Alert(
                     f"{fl} filetype is not supported."
                     "\nSupported filetypes are: "
                     + f"{', '.join(feature_extraction_opts.supported_filetypes)}",
                     color="danger",
+                    dismissable=True,
                 ),
                 {"display": "none"},
+                "",
             )
 
     return (
@@ -285,6 +288,7 @@ def display_feature_extraction_opts(filenames):
             dismissable=True,
         ),
         {"display": "block"},
+        f"Example file: {filenames[0]}",
     )
 
 
@@ -326,8 +330,7 @@ def sync_table_and_plot(
     elif trigger_id == "plot":
         if plot_selected_data:
             print(plot_selected_data)
-            plot_selected_rows = [p["pointIndex"]
-                                  for p in plot_selected_data["points"]]
+            plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
             if selected_data and set(selected_data) == set(plot_selected_rows):
                 raise PreventUpdate
             else:
