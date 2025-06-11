@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import unittest
+from copy import deepcopy
 
 import librosa
 import numpy as np
@@ -33,32 +34,24 @@ class TestFeatureExtractor(unittest.TestCase):
         for fn in self.filenames:
             with open(fn, "rb") as fb:
                 data = fb.read()
-                self.filebytes.append(base64.b64encode(data).decode("ascii"))
+                self.filebytes.append(
+                    f"data:audio/wav;base64,{base64.b64encode(data).decode('ascii')}"
+                )
         self.decoded_files = []
         for fb in self.filebytes:
             header, b64 = fb.split(",", 1)
             audio_bytes = base64.b64decode(b64)
             self.decoded_files.append(io.BytesIO(audio_bytes))
         self.sig_librosa, self.sr_librosa = librosa.load(
-            os.path.join(
-                os.path.dirname(__file__),
-                "data",
-                self.filenames[0],
-            ),
+            self.filenames[0],
             sr=None,
         )
-        self.sig_torch, self.sr_torch = torchaudio.load(
-            os.path.join(
-                os.path.dirname(__file__),
-                "data",
-                self.filenames[0],
-            )
-        )
+        self.sig_torch, self.sr_torch = torchaudio.load(self.filenames[0])
 
     def test_load_audio(self):
         # Test audio load for MFCCs/LPCCs
         y, sr = FeatureExtractor._load_audio(
-            audio_file=self.decoded_files[0],
+            audio_file=deepcopy(self.decoded_files[0]),
             method="mel_features",
         )
 
@@ -77,7 +70,7 @@ class TestFeatureExtractor(unittest.TestCase):
 
         # Test audio load for torch
         y, sr = FeatureExtractor._load_audio(
-            audio_file=self.decoded_files[0],
+            audio_file=deepcopy(self.decoded_files[0]),
             method="speaker_embeddings",
         )
 
@@ -222,7 +215,7 @@ class TestFeatureExtractor(unittest.TestCase):
             "sample": ["sample1"],
         }
         metadata = FeatureExtractor.extract_metadata(
-            filename=self.audio_files[0],
+            filename=self.filenames[0],
             **self.metavars,
         )
 
@@ -276,7 +269,9 @@ class TestFeatureExtractor(unittest.TestCase):
             "fe.filenames is different",
         )
         self.assertCountEqual(
-            fe.decoded_files, self.decoded_files, "fe.decoded_files is different"
+            [fb.getvalue() for fb in fe.decoded_files],
+            [fb.getvalue() for fb in self.decoded_files],
+            "fe.decoded_files is different",
         )
 
         # Test exceptions

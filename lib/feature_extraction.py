@@ -410,7 +410,7 @@ class FeatureExtractor:
 
     # Helper for loading audio files
     @staticmethod
-    def _load_audio(audio_file: str, method: str) -> Tuple[np.ndarray, int]:
+    def _load_audio(audio_file: io.BytesIO, method: str) -> Tuple[np.ndarray, int]:
         """Loads audio file and returns audio signal and sampling rate.
 
         Parameters
