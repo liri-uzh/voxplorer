@@ -106,7 +106,6 @@ def store_meta_info(n_clicks, tmp_features_meta, meta_columns):
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "confirmed-selection-btn":
-        print(meta_columns)
         if n_clicks > 0:
             return (
                 meta_columns,
