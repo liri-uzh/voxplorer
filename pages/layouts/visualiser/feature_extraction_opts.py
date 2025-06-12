@@ -1,7 +1,9 @@
 import dash
-from dash import dcc, html, Input, Output, State, callback
+from dash import dcc, html, Input, Output, State, callback, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+
+from lib.data_loader import parse_audio_contents
 
 
 # --- Helper functions ---
@@ -27,6 +29,44 @@ def _populate_metavars_form(tokens: list | tuple):
         )
 
     return form_elements
+
+
+# helper for callback 3: process feature methods and metavars
+def _process_opts(
+    feeature_extraction_method: str,
+    feature_opts: list,
+    feature_opts_values: list,
+    metavar_opts: list,
+    metavar_opts_values: list,
+    separator: str,
+):
+    # NOTE: check lib.feature_extraction.FeatureExtractor for info on format
+    parsed_features_opts = {feeature_extraction_method: {}}
+    parsed_metavars_opts = {
+        "variables": [None] * len(metavar_opts),
+        "split_char": separator,
+    }
+
+    # Parse feature opts
+    i = 0
+    while i < len(feature_opts):
+        param_name = feature_opts[i]["id"]["id"]
+        parsed_features_opts[feeature_extraction_method][param_name] = (
+            feature_opts_values[i]
+        )
+
+    # Parse metavar opts
+    i = 0
+    while i < len(metavar_opts):
+        idx_var = metavar_opts[i]["id"]["id"]
+        varname = metavar_opts_values[i]
+
+        if varname == "":
+            varname == "-"  # Leave empty == ignore
+
+        parsed_metavars_opts["variables"][idx_var] = varname
+
+    return parsed_features_opts, parsed_metavars_opts
 
 
 # --- Mel-features opts ---
@@ -262,11 +302,11 @@ feature_extraction_card = (
                         options=[
                             {
                                 "label": "Mel features",
-                                "value": "mel",
+                                "value": "mel_features",
                             },
                             {
                                 "label": "DNN speaker embeddings",
-                                "value": "sp_emb",
+                                "value": "speaker_embeddings",
                             },
                         ],
                         value="mel",
@@ -448,18 +488,58 @@ def update_metavars_params(example_filename, separator, n_intervals):
             )
             form_elements = _populate_metavars_form(tokens)
         except Exception as e:
-            return dbc.Alert(
-                f"Error while updating metavariables specification: {e}",
-                color="danger",
-                dismissable=True,
+            return (
+                [
+                    dbc.Alert(
+                        f"Error while updating metavariables specification: {e}",
+                        color="danger",
+                        dismissable=True,
+                    )
+                ],
+                False,
             )
 
-    return (
-        form_elements,
-        True,
-    )
+        return (
+            form_elements,
+            True,
+        )
 
+    else:
+        print("update metavars params called but did nothing")
+        print(f"Trigger ID: {trigger_id}")
+        raise PreventUpdate
 
-# TODO: --- helper for callback 3: process feature methods and metavars ---
 
 # TODO: --- Callback 3: feature extraction ---
+@callback(
+    [
+        Output("tmp-features-data", "data"),
+        Output("tmp-features-metainformation", "data"),
+        Output("feature-extraction-output", "children"),
+    ],
+    [
+        Input("extract-features-btn", "n_clicks"),
+    ],
+    [
+        State("feature-extraction-algorithm", "value"),
+        State({"type": "feat-extr-param", "id": ALL}, "value"),
+        State("metavars-separator", "value"),
+        State({"type": "metavars-param", "id": ALL}, "value"),
+    ],
+    suppress_initial_call=True,
+)
+def run_feature_extraction(
+    n_clicks,
+    feat_extr_algo,
+    feat_extr_opts_vals,
+    separator,
+    metav_opts_vals,
+):
+    print(n_clicks)
+
+    # Get options
+    print(dash.callback_context.states_list)
+
+    return None, None, dbc.Alert("Called run features", color="success")
+
+    # TODO: make callback to clear temporary storage to avoid duplicate outputs

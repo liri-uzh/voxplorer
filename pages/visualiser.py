@@ -8,11 +8,9 @@ from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-
 # local imports
 from lib.data_loader import (
     parse_table_contents,
-    parse_audio_contents,
     ALLOWED_EXTENSIONS_AUDIO,
 )
 from pages.layouts.visualiser import (
@@ -41,6 +39,10 @@ layout_storage = html.Div(
         dcc.Store(id="stored-reduced-data", storage_type="session"),
         # selected observations
         dcc.Store(id="selected-observations", storage_type="session"),
+        # temporary table for feature extraction to avoid duplicate outputs in callbacks
+        dcc.Store(id="tmp-features-table", storage_type="session"),
+        # temporary metavars for feature extraction to avoid duplicate outputs in callbacks
+        dcc.Store(id="tmp-features-metainformation", storage_type="session"),
     ]
 )
 
@@ -165,6 +167,7 @@ layout_table = [
 layout_audio = [
     layout_upload_audio,
     feature_extraction_opts.layout,
+    meta_config_card.layout,
     table_preview.layout,
     dimensionality_reduction_opts.layout,
     plot_layout.layout,
@@ -217,38 +220,60 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     ],
     [
         Input("upload-table", "contents"),
+        Input("tmp-features-table", "data"),
     ],
     [
         State("upload-table", "filename"),
     ],
 )
-def upload_table(contents, filename):
-    if contents is not None and filename is not None:
-        # parse uploaded contents
-        data_table, alert_msg = parse_table_contents(contents, filename)
+def upload_table(contents, tmp_features_table, filename):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
 
-        # manage returns
-        if data_table is not None:
-            return (
-                dbc.Alert(
-                    f"{filename} uploaded successfully.",
-                    color="success",
-                    dismissable=True,
-                ),
-                data_table,
-                {"display": "block"},
-            )
-        else:
-            return (
-                alert_msg,
-                None,
-                {"display": "none"},
-            )
-    return (
-        dbc.Alert("No table uploaded yet.", color="info"),
-        None,
-        {"display": "none"},
-    )
+    # Get trigger id
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "upload-table":
+        if contents is not None and filename is not None:
+            # parse uploaded contents
+            data_table, alert_msg = parse_table_contents(contents, filename)
+
+            # manage returns
+            if data_table is not None:
+                return (
+                    dbc.Alert(
+                        f"{filename} uploaded successfully.",
+                        color="success",
+                        dismissable=True,
+                    ),
+                    data_table,
+                    {"display": "block"},
+                )
+            else:
+                return (
+                    alert_msg,
+                    None,
+                    {"display": "none"},
+                )
+        return (
+            dbc.Alert("No table uploaded yet.", color="info"),
+            None,
+            {"display": "none"},
+        )
+
+    elif trigger_id == "tmp-features-table":
+        data_table = tmp_features_table
+        return (
+            [],
+            data_table,
+            {"display": "none"},
+        )
+
+    else:
+        print("Data upload callback was called but did nothing")
+        print(f"Trigger ID: {trigger_id}")
+        raise PreventUpdate
 
 
 # --- Callback 2b: display options ---

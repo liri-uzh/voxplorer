@@ -81,23 +81,50 @@ def display_column_checklist(data_table):
 
 # --- Callback 2: store meta-information when confirmed
 @callback(
-    Output("stored-metainformation", "data"),
-    Output("meta-selection-output", "children"),
-    Input("confirmed-selection-btn", "n_clicks"),
-    State("meta-columns-checklist", "value"),
+    [
+        Output("stored-metainformation", "data"),
+        Output("meta-selection-output", "children"),
+    ],
+    [
+        Input("confirmed-selection-btn", "n_clicks"),
+        Input("tmp-features-metainformation", "data"),
+    ],
+    [
+        State("meta-columns-checklist", "value"),
+    ],
     prevent_initial_call=True,
 )
-def store_meta_info(n_clicks, meta_columns):
-    if n_clicks > 0:
+def store_meta_info(n_clicks, tmp_features_meta, meta_columns):
+    # TODO: make disappear after selection (accordion style?)
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    # Get trigger ID
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "confirmed-selection-btn":
+        if n_clicks > 0:
+            return (
+                meta_columns,
+                [
+                    dbc.Alert(
+                        "Selection confirmed",
+                        color="success",
+                        dismissable=True,
+                    )
+                ],
+            )
+        else:
+            PreventUpdate
+    elif trigger_id == "tmp-features-metainformation":
+        meta_columns = tmp_features_meta
         return (
             meta_columns,
-            [
-                dbc.Alert(
-                    "Selection confirmed",
-                    color="success",
-                    dismissable=True,
-                )
-            ],
+            [],
         )
     else:
-        PreventUpdate
+        print("Store meta-info called but did nothing.")
+        print(f"Trigger ID: {trigger_id}")
+        raise PreventUpdate

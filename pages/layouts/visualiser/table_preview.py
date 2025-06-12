@@ -85,6 +85,7 @@ layout = html.Div(
         Input("stored-table", "data"),
         Input("stored-metainformation", "data"),
         Input("confirmed-selection-btn", "n_clicks"),
+        # TODO: add the button from the feature extraction module
     ],
 )
 def build_interactive_table(data_table, meta_columns, n_clicks):
@@ -138,8 +139,7 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
 
         return (
             dbc.Card(
-                dbc.CardBody(html.Div(interactive_table,
-                             style={"width": "100%"})),
+                dbc.CardBody(html.Div(interactive_table, style={"width": "100%"})),
                 className="mt-4",
             ),
             {"display": "block"},
@@ -203,8 +203,7 @@ def select_deselect_all(
             else:
                 return (selected_data,)
     elif trigger_id == "select-all-btn":
-        to_select = [i for i, row in enumerate(
-            original_rows) if row in filtered_rows]
+        to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
         return (to_select,)
     elif trigger_id == "deselect-all-btn":
         return ([],)
@@ -276,8 +275,7 @@ def download_selected(n_clicks, data_table, selectedobservations):
             )
         else:
             df = df.iloc[selectedobservations]
-            to_download = dcc.send_data_frame(
-                df.to_csv, "selected_data_table.csv")
+            to_download = dcc.send_data_frame(df.to_csv, "selected_data_table.csv")
     except Exception as e:
         return (
             None,
