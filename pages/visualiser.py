@@ -84,6 +84,7 @@ upload_sel_layout = dbc.Row(
 # --- Layout upload table ---
 layout_upload_table = dbc.Row(
     [
+        html.Div(id="upload-audio"),
         dbc.Card(
             [
                 dbc.CardHeader(html.H4("Upload a table (.csv, .tsv, .xlxs)")),
@@ -113,13 +114,14 @@ layout_upload_table = dbc.Row(
                 ),
             ]
         ),
-    ]
+    ],
 )
 
 
 # --- Layout upload audio ---
 layout_upload_audio = dbc.Row(
     [
+        html.Div(id="upload-table"),
         dbc.Card(
             [
                 dbc.CardHeader(html.H4("Upload audio files (.wav)")),
@@ -149,7 +151,7 @@ layout_upload_audio = dbc.Row(
                 ),
             ]
         ),
-    ]
+    ],
 )
 
 
@@ -166,8 +168,8 @@ layout_table = [
 # --- Layout audio ---
 layout_audio = [
     layout_upload_audio,
-    feature_extraction_opts.layout,
     meta_config_card.layout,
+    feature_extraction_opts.layout,
     table_preview.layout,
     dimensionality_reduction_opts.layout,
     plot_layout.layout,

@@ -513,7 +513,7 @@ def update_metavars_params(example_filename, separator, n_intervals):
 # TODO: --- Callback 3: feature extraction ---
 @callback(
     [
-        Output("tmp-features-data", "data"),
+        Output("tmp-features-table", "data"),
         Output("tmp-features-metainformation", "data"),
         Output("feature-extraction-output", "children"),
     ],
@@ -540,6 +540,7 @@ def run_feature_extraction(
     # Get options
     print(dash.callback_context.states_list)
 
-    return None, None, dbc.Alert("Called run features", color="success")
+    raise PreventUpdate
 
-    # TODO: make callback to clear temporary storage to avoid duplicate outputs
+
+# TODO: make callback to clear temporary storage to avoid duplicate outputs
