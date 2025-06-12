@@ -325,14 +325,19 @@ metavars_card = (
                             ),
                         ],
                     ),
-                    dbc.Col(html.Div(id="metavars-specification")),
+                    dbc.Row(
+                        html.Div(
+                            id="metavars-specification",
+                            children=[],
+                        ),
+                    ),
+                    dcc.Interval(
+                        id="metavars-specification-delayed-update",
+                        interval=50,
+                        n_intervals=0,
+                        disabled=True,
+                    ),
                 ],
-                dcc.Interval(
-                    id="metavars-specification-delayed-update",
-                    interval=50,
-                    n_intervals=0,
-                    disabled=True,
-                ),
             ),
         ],
         className="mb-3",
@@ -419,7 +424,7 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
         Input("metavars-specification-delayed-update", "n_intervals"),
     ],
 )
-def update_metavars_params(example_filename, separator):
+def update_metavars_params(example_filename, separator, n_intervals):
     ctx = dash.callback_context
     if not ctx.triggered:
         raise PreventUpdate
@@ -435,13 +440,16 @@ def update_metavars_params(example_filename, separator):
         )
 
     # else create new container
-    elif trigger_id in {"algorithm-parameters-delayed-update", "example-file-label"}:
+    elif trigger_id in {"metavars-specification-delayed-update", "example-file-label"}:
         try:
+            print("Updating form")
             tokens = _split_example_file(
                 sep=separator,
                 example_str=example_filename,
             )
             form_elements = _populate_metavars_form(tokens)
+            print(f"Separator: {separator}")
+            print(form_elements)
         except Exception as e:
             return dbc.Alert(
                 f"Error while updating metavariables specification: {e}",

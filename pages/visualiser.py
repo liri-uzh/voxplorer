@@ -288,7 +288,7 @@ def display_feature_extraction_opts(filenames):
             dismissable=True,
         ),
         {"display": "block"},
-        f"Example file: {filenames[0]}",
+        f"{filenames[0]}",
     )
 
 
