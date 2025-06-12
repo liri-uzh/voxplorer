@@ -4,6 +4,31 @@ from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 
+# --- Helper functions ---
+def _split_example_file(sep: str, example_str: str):
+    example_str = example_str.rsplit(".", 1)[0]
+    return example_str.split(sep)
+
+
+def _populate_metavars_form(tokens: list | tuple):
+    form_elements = []
+    for idx, tok in enumerate(tokens):
+        form_elements.append(
+            dbc.Row(
+                [
+                    dbc.Label(tok),
+                    dbc.Input(
+                        id={"type": "metavars-param", "id": f"{idx}"},
+                        type="text",
+                        placeholder="variable name or ('-' to ignore)",
+                    ),
+                ]
+            )
+        )
+
+    return form_elements
+
+
 # --- Mel-features opts ---
 mel_opts = [
     html.A(
@@ -273,15 +298,41 @@ metavars_card = (
                         + " the metadata variables.\n"
                         + "Use '-' to specify variables which should be ignored."
                     ),
-                    dbc.Col(
-                        html.Label(
-                            "Example file:",
-                            id="example-file-label",
-                        ),
-                        width=2,
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.Label(
+                                        "Example file: ",
+                                    ),
+                                    html.P(
+                                        "",
+                                        id="example-file-label",
+                                    ),
+                                ],
+                                width=3,
+                            ),
+                            dbc.Col(
+                                [
+                                    dbc.Label("Separator", width=2),
+                                    dbc.Input(
+                                        type="text",
+                                        value="_",
+                                        id="metavars-separator",
+                                    ),
+                                ],
+                                width=6,
+                            ),
+                        ],
                     ),
-                    dbc.Col(html.Div(id="token-naming-container")),
+                    dbc.Col(html.Div(id="metavars-specification")),
                 ],
+                dcc.Interval(
+                    id="metavars-specification-delayed-update",
+                    interval=50,
+                    n_intervals=0,
+                    disabled=True,
+                ),
             ),
         ],
         className="mb-3",
@@ -357,9 +408,53 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
 
 
 # TODO: --- Callback 2: metavars interactive specification ---
+@callback(
+    [
+        Output("metavars-specification", "children"),
+        Output("metavars-specification-delayed-update", "disabled"),
+    ],
+    [
+        Input("example-file-label", "children"),
+        Input("metavars-separator", "value"),
+        Input("metavars-specification-delayed-update", "n_intervals"),
+    ],
+)
+def update_metavars_params(example_filename, separator):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    # Get trigger id
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    # When sep changes, clear container and enable interval
+    if trigger_id == "metavars-separator":
+        return (
+            [html.Div("Loading...")],
+            False,
+        )
+
+    # else create new container
+    elif trigger_id in {"algorithm-parameters-delayed-update", "example-file-label"}:
+        try:
+            tokens = _split_example_file(
+                sep=separator,
+                example_str=example_filename,
+            )
+            form_elements = _populate_metavars_form(tokens)
+        except Exception as e:
+            return dbc.Alert(
+                f"Error while updating metavariables specification: {e}",
+                color="danger",
+                dismissable=True,
+            )
+
+    return (
+        form_elements,
+        True,
+    )
 
 
 # TODO: --- helper for callback 3: process feature methods and metavars ---
-
 
 # TODO: --- Callback 3: feature extraction ---
