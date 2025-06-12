@@ -442,14 +442,11 @@ def update_metavars_params(example_filename, separator, n_intervals):
     # else create new container
     elif trigger_id in {"metavars-specification-delayed-update", "example-file-label"}:
         try:
-            print("Updating form")
             tokens = _split_example_file(
                 sep=separator,
                 example_str=example_filename,
             )
             form_elements = _populate_metavars_form(tokens)
-            print(f"Separator: {separator}")
-            print(form_elements)
         except Exception as e:
             return dbc.Alert(
                 f"Error while updating metavariables specification: {e}",
