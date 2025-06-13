@@ -13,6 +13,7 @@ from lib.data_loader import (
     parse_table_contents,
     ALLOWED_EXTENSIONS_AUDIO,
 )
+from pages.layouts.visualiser.table_upload import table_upload
 from pages.layouts.visualiser import (
     meta_config_card,
     feature_extraction_opts,
@@ -81,43 +82,6 @@ upload_sel_layout = dbc.Row(
 )
 
 
-# --- Layout upload table ---
-layout_upload_table = dbc.Row(
-    [
-        html.Div(id="upload-audio"),
-        dbc.Card(
-            [
-                dbc.CardHeader(html.H4("Upload a table (.csv, .tsv, .xlxs)")),
-                dbc.CardBody(
-                    [
-                        dcc.Upload(
-                            id="upload-table",
-                            children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A("Select a file"),
-                                ]
-                            ),
-                            style={
-                                "width": "100%",
-                                "height": "60px",
-                                "lineHeight": "60px",
-                                "borderWidth": "1px",
-                                "borderStyle": "dashed",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
-                            },
-                            multiple=False,
-                        ),
-                        html.Div(id="table-output", className="mt-3"),
-                    ]
-                ),
-            ]
-        ),
-    ],
-)
-
-
 # --- Layout upload audio ---
 layout_upload_audio = dbc.Row(
     [
@@ -157,18 +121,13 @@ layout_upload_audio = dbc.Row(
 
 # --- Layout table ---
 layout_table = [
-    layout_upload_table,
-    meta_config_card.layout,
-    table_preview.layout,
-    dimensionality_reduction_opts.layout,
-    plot_layout.layout,
+    table_upload.layout,
 ]
 
 
 # --- Layout audio ---
 layout_audio = [
     layout_upload_audio,
-    meta_config_card.layout,
     feature_extraction_opts.layout,
     table_preview.layout,
     dimensionality_reduction_opts.layout,
@@ -213,69 +172,68 @@ def upload_choice(n_clicks_table, n_clicks_audio):
         raise PreventUpdate
 
 
-# --- Callback 2a: table upload ---
-@callback(
-    [
-        Output("table-output", "children"),
-        Output("stored-table", "data"),
-        Output("meta-config-card", "style"),
-    ],
-    [
-        Input("upload-table", "contents"),
-        Input("tmp-features-table", "data"),
-    ],
-    [
-        State("upload-table", "filename"),
-    ],
-)
-def upload_table(contents, tmp_features_table, filename):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-
-    # Get trigger id
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    if trigger_id == "upload-table":
-        if contents is not None and filename is not None:
-            # parse uploaded contents
-            data_table, alert_msg = parse_table_contents(contents, filename)
-
-            # manage returns
-            if data_table is not None:
-                return (
-                    dbc.Alert(
-                        f"{filename} uploaded successfully.",
-                        color="success",
-                        dismissable=True,
-                    ),
-                    data_table,
-                    {"display": "block"},
-                )
-            else:
-                return (
-                    alert_msg,
-                    None,
-                    {"display": "none"},
-                )
-        return (
-            dbc.Alert("No table uploaded yet.", color="info"),
-            None,
-            {"display": "none"},
-        )
-
-    elif trigger_id == "tmp-features-table":
-        data_table = tmp_features_table
-        return (
-            [],
-            data_table,
-            {"display": "none"},
-        )
-
-    else:
-        print("Data upload callback was called but did nothing")
-        print(f"Trigger ID: {trigger_id}")
-        raise PreventUpdate
+# # --- Callback 2a: table upload ---
+# @callback(
+#     [
+#         Output("table-output", "children"),
+#         Output("stored-table", "data"),
+#         Output("meta-config-card", "style"),
+#     ],
+#     [
+#         Input("upload-table", "contents"),
+#     ],
+#     [
+#         State("upload-table", "filename"),
+#     ],
+# )
+# def upload_table(contents, tmp_features_table, filename):
+#     ctx = dash.callback_context
+#     if not ctx.triggered:
+#         raise PreventUpdate
+#
+#     # Get trigger id
+#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#
+#     if trigger_id == "upload-table":
+#         if contents is not None and filename is not None:
+#             # parse uploaded contents
+#             data_table, alert_msg = parse_table_contents(contents, filename)
+#
+#             # manage returns
+#             if data_table is not None:
+#                 return (
+#                     dbc.Alert(
+#                         f"{filename} uploaded successfully.",
+#                         color="success",
+#                         dismissable=True,
+#                     ),
+#                     data_table,
+#                     {"display": "block"},
+#                 )
+#             else:
+#                 return (
+#                     alert_msg,
+#                     None,
+#                     {"display": "none"},
+#                 )
+#         return (
+#             dbc.Alert("No table uploaded yet.", color="info"),
+#             None,
+#             {"display": "none"},
+#         )
+#
+#     elif trigger_id == "tmp-features-table":
+#         data_table = tmp_features_table
+#         return (
+#             [],
+#             data_table,
+#             {"display": "none"},
+#         )
+#
+#     else:
+#         print("Data upload callback was called but did nothing")
+#         print(f"Trigger ID: {trigger_id}")
+#         raise PreventUpdate
 
 
 # --- Callback 2b: display options ---
