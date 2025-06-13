@@ -10,12 +10,10 @@ import dash_bootstrap_components as dbc
 
 # local imports
 from lib.data_loader import (
-    parse_table_contents,
     ALLOWED_EXTENSIONS_AUDIO,
 )
 from pages.layouts.visualiser.table_upload import table_upload
 from pages.layouts.visualiser import (
-    meta_config_card,
     feature_extraction_opts,
     table_preview,
     dimensionality_reduction_opts,
@@ -170,70 +168,6 @@ def upload_choice(n_clicks_table, n_clicks_audio):
         return (layout_audio,)
     else:
         raise PreventUpdate
-
-
-# # --- Callback 2a: table upload ---
-# @callback(
-#     [
-#         Output("table-output", "children"),
-#         Output("stored-table", "data"),
-#         Output("meta-config-card", "style"),
-#     ],
-#     [
-#         Input("upload-table", "contents"),
-#     ],
-#     [
-#         State("upload-table", "filename"),
-#     ],
-# )
-# def upload_table(contents, tmp_features_table, filename):
-#     ctx = dash.callback_context
-#     if not ctx.triggered:
-#         raise PreventUpdate
-#
-#     # Get trigger id
-#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#
-#     if trigger_id == "upload-table":
-#         if contents is not None and filename is not None:
-#             # parse uploaded contents
-#             data_table, alert_msg = parse_table_contents(contents, filename)
-#
-#             # manage returns
-#             if data_table is not None:
-#                 return (
-#                     dbc.Alert(
-#                         f"{filename} uploaded successfully.",
-#                         color="success",
-#                         dismissable=True,
-#                     ),
-#                     data_table,
-#                     {"display": "block"},
-#                 )
-#             else:
-#                 return (
-#                     alert_msg,
-#                     None,
-#                     {"display": "none"},
-#                 )
-#         return (
-#             dbc.Alert("No table uploaded yet.", color="info"),
-#             None,
-#             {"display": "none"},
-#         )
-#
-#     elif trigger_id == "tmp-features-table":
-#         data_table = tmp_features_table
-#         return (
-#             [],
-#             data_table,
-#             {"display": "none"},
-#         )
-#
-#     else:
-#         print("Data upload callback was called but did nothing")
-#         print(f"Trigger ID: {trigger_id}")
-#         raise PreventUpdate
 
 
 # --- Callback 2b: display options ---

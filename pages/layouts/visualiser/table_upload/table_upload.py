@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 
 # Local
 from lib.data_loader import parse_table_contents
+from pages.layouts.visualiser.table_upload import metaconfig
 
 
 # --- Setup table-upload storage ---
@@ -58,6 +59,7 @@ layout = dbc.Row(
     [
         storage_components,
         upload_component,
+        metaconfig.layout,
     ]
 )
 
