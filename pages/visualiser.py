@@ -32,14 +32,17 @@ layout_storage = html.Div(
         dcc.Store(id="stored-table", storage_type="session"),
         # table-spec storage for session
         dcc.Store(id="stored-metainformation", storage_type="session"),
+        # FIXME: new layouts structure -> audio_upload
         # feature extraction options
         dcc.Store(id="stored-feature-extraction-opts", storage_type="session"),
         # reduced dimensions table
         dcc.Store(id="stored-reduced-data", storage_type="session"),
         # selected observations
         dcc.Store(id="selected-observations", storage_type="session"),
+        # FIXME: new layouts structure -> audio_upload
         # temporary table for feature extraction to avoid duplicate outputs in callbacks
         dcc.Store(id="tmp-features-table", storage_type="session"),
+        # FIXME: new layouts structure -> audio_upload
         # temporary metavars for feature extraction to avoid duplicate outputs in callbacks
         dcc.Store(id="tmp-features-metainformation", storage_type="session"),
     ]
