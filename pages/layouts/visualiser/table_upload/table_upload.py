@@ -66,7 +66,6 @@ layout = dbc.Row(
     [
         Output("table-output", "children"),
         Output("stored-data-table", "data"),
-        # TODO: add metaconfig card style ouput after modifying it
     ],
     [
         Input("upload-table", "contents"),
@@ -95,14 +94,12 @@ def upload_table(
                     dismissable=True,
                 ),
                 data_table,
-                # TODO: metaconfig
             )
 
         else:
             return (
                 alert,
                 None,
-                # TODO: metaconfig
             )
 
     return (
@@ -112,5 +109,4 @@ def upload_table(
             dismissable=True,
         ),
         None,
-        # TODO: metaconfig
     )
