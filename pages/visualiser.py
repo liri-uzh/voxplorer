@@ -173,6 +173,12 @@ def upload_choice(n_clicks_table, n_clicks_audio):
         raise PreventUpdate
 
 
+# TODO: Add callback for when data_table and metainformation
+# are stored; interactive (disappearing) metaconfig card in case
+# user wants to update matavars. (This can be shared by both table and audio uplaod)
+
+
+# TODO: this goes to the audio_upload layout
 # --- Callback 2b: display options ---
 @callback(
     [
