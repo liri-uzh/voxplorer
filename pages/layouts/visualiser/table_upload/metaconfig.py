@@ -32,7 +32,7 @@ layout = dbc.Row(
             className="mb-4",
             color="secondary",
             inverse=True,
-            style={"display": "block"},
+            style={"display": "none"},
         ),
     ]
 )
@@ -41,6 +41,7 @@ layout = dbc.Row(
 # --- Callback 1: display checklist ---
 @callback(
     [
+        Output("meta-config-card", "style"),
         Output("columns-checklist-container", "children"),
     ],
     [
@@ -63,6 +64,7 @@ def display_columns_checklist(data_table):
         )
 
         return (
+            {"display": "block"},
             [
                 html.P(
                     "Select the variables that represent meta-information (categorical/text):"

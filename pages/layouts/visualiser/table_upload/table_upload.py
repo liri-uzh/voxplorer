@@ -1,7 +1,4 @@
-import os
-import dash
 from dash import dcc, html, Input, Output, State, callback
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # Local
