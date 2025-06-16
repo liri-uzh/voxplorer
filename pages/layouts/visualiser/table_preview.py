@@ -84,12 +84,10 @@ layout = html.Div(
     [
         Input("stored-table", "data"),
         Input("stored-metainformation", "data"),
-        Input("confirmed-selection-btn", "n_clicks"),
-        # TODO: add the button from the feature extraction module
     ],
 )
-def build_interactive_table(data_table, meta_columns, n_clicks):
-    if data_table is None or meta_columns is None or n_clicks < 1:
+def build_interactive_table(data_table, meta_columns):
+    if data_table is None and meta_columns is None:
         raise PreventUpdate
 
     # parse meta columns

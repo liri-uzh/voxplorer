@@ -49,31 +49,29 @@ layout = dbc.Row(
     ],
 )
 def display_columns_checklist(data_table):
-    if data_table is not None:
-        # get column names
-        colnames = list(data_table[0].keys())
-
-        # create checklist
-        checklist = dbc.Checklist(
-            id="meta-columns-checklist",
-            options=[
-                {"label": col, "value": col} for col in colnames if col != "index"
-            ],
-            value=[],
-            style={"display": "block"},
-        )
-
-        return (
-            {"display": "block"},
-            [
-                html.P(
-                    "Select the variables that represent meta-information (categorical/text):"
-                ),
-                checklist,
-            ],
-        )
-    else:
+    if data_table is None:
         raise PreventUpdate
+
+    # get column names
+    colnames = list(data_table[0].keys())
+
+    # create checklist
+    checklist = dbc.Checklist(
+        id="meta-columns-checklist",
+        options=[{"label": col, "value": col} for col in colnames if col != "index"],
+        value=[],
+        style={"display": "block"},
+    )
+
+    return (
+        {"display": "block"},
+        [
+            html.P(
+                "Select the variables that represent meta-information (categorical/text):"
+            ),
+            checklist,
+        ],
+    )
 
 
 # --- Callback 2: store selected metavariables ---

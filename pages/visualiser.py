@@ -120,12 +120,6 @@ layout_upload_audio = dbc.Row(
 )
 
 
-# --- Layout table ---
-layout_table = [
-    table_upload.layout,
-]
-
-
 # --- Layout audio ---
 layout_audio = [
     layout_upload_audio,
@@ -142,6 +136,9 @@ layout = dbc.Container(
         layout_storage,
         upload_sel_layout,
         html.Div(id="data-mode-div"),
+        dimensionality_reduction_opts.layout,
+        table_preview.layout,
+        plot_layout.layout,
     ],
     fluid=True,
 )
@@ -166,7 +163,7 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "upload-table-btn":
-        return (layout_table,)
+        return (table_upload.layout,)
     elif trigger_id == "upload-audio-btn":
         return (layout_audio,)
     else:
@@ -176,6 +173,40 @@ def upload_choice(n_clicks_table, n_clicks_audio):
 # TODO: Add callback for when data_table and metainformation
 # are stored; interactive (disappearing) metaconfig card in case
 # user wants to update matavars. (This can be shared by both table and audio uplaod)
+# --- Callback 2: update store components when data is uploaded ---
+@callback(
+    [
+        Output("stored-table", "data"),
+        Output("stored-metainformation", "data"),
+        Output("stored-data-table", "data", allow_duplicate=True),
+        Output("stored-metainformation-table", "data", allow_duplicate=True),
+    ],
+    [
+        Input("confirmed-selection-btn", "n_clicks"),
+    ],
+    [
+        State("stored-data-table", "data"),
+        State("stored-metainformation-table", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def promote_and_clear_temp_store(
+    n_clicks_table,
+    data_table,
+    metainformation_table,
+):
+    # TODO: add pipeline for audio upload
+    if data_table is None and metainformation_table is None:
+        raise PreventUpdate
+
+    new_table = data_table or dash.no_update
+    new_meta = metainformation_table or dash.no_update
+
+    # Clear memory used by temporary store components
+    cleared_table = None
+    cleared_meta = None
+
+    return new_table, new_meta, cleared_table, cleared_meta
 
 
 # TODO: this goes to the audio_upload layout

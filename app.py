@@ -7,6 +7,7 @@ app = dash.Dash(
     __name__,
     use_pages=True,
     external_stylesheets=[dbc.themes.FLATLY],
+    prevent_initial_callbacks=True,
 )
 
 # Navigation bar

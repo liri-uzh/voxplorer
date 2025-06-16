@@ -52,13 +52,15 @@ upload_component = html.Div(
 )
 
 # --- Basic layout ---
-layout = dbc.Row(
-    [
-        storage_components,
-        upload_component,
-        metaconfig.layout,
-    ]
-)
+layout = [
+    dbc.Row(
+        [
+            storage_components,
+            upload_component,
+            metaconfig.layout,
+        ]
+    )
+]
 
 
 # --- Callback 1: table upload ---
@@ -110,3 +112,6 @@ def upload_table(
         ),
         None,
     )
+
+
+# --- Callback 2: update app-wide table and metavars ---
