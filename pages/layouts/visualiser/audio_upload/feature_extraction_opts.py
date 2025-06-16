@@ -1,7 +1,10 @@
+import os
 import dash
 from dash import dcc, html, Input, Output, State, callback, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+
+from lib.data_loader import ALLOWED_EXTENSIONS_AUDIO
 
 
 # --- Helper functions ---
@@ -27,44 +30,6 @@ def _populate_metavars_form(tokens: list | tuple):
         )
 
     return form_elements
-
-
-# helper for callback 3: process feature methods and metavars
-def _process_opts(
-    feeature_extraction_method: str,
-    feature_opts: list,
-    feature_opts_values: list,
-    metavar_opts: list,
-    metavar_opts_values: list,
-    separator: str,
-):
-    # NOTE: check lib.feature_extraction.FeatureExtractor for info on format
-    parsed_features_opts = {feeature_extraction_method: {}}
-    parsed_metavars_opts = {
-        "variables": [None] * len(metavar_opts),
-        "split_char": separator,
-    }
-
-    # Parse feature opts
-    i = 0
-    while i < len(feature_opts):
-        param_name = feature_opts[i]["id"]["id"]
-        parsed_features_opts[feeature_extraction_method][param_name] = (
-            feature_opts_values[i]
-        )
-
-    # Parse metavar opts
-    i = 0
-    while i < len(metavar_opts):
-        idx_var = metavar_opts[i]["id"]["id"]
-        varname = metavar_opts_values[i]
-
-        if varname == "":
-            varname == "-"  # Leave empty == ignore
-
-        parsed_metavars_opts["variables"][idx_var] = varname
-
-    return parsed_features_opts, parsed_metavars_opts
 
 
 # --- Mel-features opts ---
@@ -402,7 +367,48 @@ layout = dbc.Row(
 )
 
 
-# --- Callback 1: update opts layout ---
+# --- Callback 1: display feature extraction options ---
+@callback(
+    [
+        Output("audio-output", "children"),
+        Output("feature-extraction-opts-card", "style"),
+        Output("example-file-label", "children"),
+    ],
+    [
+        Input("upload-audio", "filename"),
+    ],
+)
+def display_feature_extraction_opts(filenames):
+    if not filenames:
+        raise PreventUpdate
+
+    # Check that all .wav files
+    for fl in filenames:
+        if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
+            return (
+                dbc.Alert(
+                    f"{fl} filetype is not supported."
+                    + "\nSupported filetypes are: "
+                    + f"{', '.join(ALLOWED_EXTENSIONS_AUDIO)}",
+                    color="danger",
+                    dismissable=True,
+                ),
+                {"display": "none"},
+                "",
+            )
+
+    return (
+        dbc.Alert(
+            f"{len(filenames)} files uploaded",
+            color="success",
+            dismissable=True,
+        ),
+        {"display": "block"},
+        f"{filenames[0]}",
+    )
+
+
+# --- Callback 2: update opts layout ---
 @callback(
     [
         Output("feature-extraction-parameters", "children"),
@@ -449,7 +455,7 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
     return form_elements, True
 
 
-# TODO: --- Callback 2: metavars interactive specification ---
+# --- Callback 3: metavars interactive specification ---
 @callback(
     [
         Output("metavars-specification", "children"),
@@ -511,36 +517,36 @@ def update_metavars_params(example_filename, separator, n_intervals):
 
 
 # TODO: --- Callback 3: feature extraction ---
-@callback(
-    [
-        Output("tmp-features-table", "data"),
-        Output("tmp-features-metainformation", "data"),
-        Output("feature-extraction-output", "children"),
-    ],
-    [
-        Input("extract-features-btn", "n_clicks"),
-    ],
-    [
-        State("feature-extraction-algorithm", "value"),
-        State({"type": "feat-extr-param", "id": ALL}, "value"),
-        State("metavars-separator", "value"),
-        State({"type": "metavars-param", "id": ALL}, "value"),
-    ],
-    suppress_initial_call=True,
-)
-def run_feature_extraction(
-    n_clicks,
-    feat_extr_algo,
-    feat_extr_opts_vals,
-    separator,
-    metav_opts_vals,
-):
-    print(n_clicks)
-
-    # Get options
-    print(dash.callback_context.states_list)
-
-    raise PreventUpdate
+# @callback(
+#     [
+#         Output("tmp-features-table", "data"),
+#         Output("tmp-features-metainformation", "data"),
+#         Output("feature-extraction-output", "children"),
+#     ],
+#     [
+#         Input("extract-features-btn", "n_clicks"),
+#     ],
+#     [
+#         State("feature-extraction-algorithm", "value"),
+#         State({"type": "feat-extr-param", "id": ALL}, "value"),
+#         State("metavars-separator", "value"),
+#         State({"type": "metavars-param", "id": ALL}, "value"),
+#     ],
+#     suppress_initial_call=True,
+# )
+# def run_feature_extraction(
+#     n_clicks,
+#     feat_extr_algo,
+#     feat_extr_opts_vals,
+#     separator,
+#     metav_opts_vals,
+# ):
+#     print(n_clicks)
+#
+#     # Get options
+#     print(dash.callback_context.states_list)
+#
+#     raise PreventUpdate
 
 
 # TODO: make callback to clear temporary storage to avoid duplicate outputs

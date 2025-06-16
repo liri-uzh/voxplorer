@@ -1,10 +1,10 @@
-import os
-from dash import dcc, html, Input, Output, State, callback
+import dash
+from dash import dcc, html, Input, Output, State, callback, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # Local
-from lib.data_loader import parse_audio_contents, ALLOWED_EXTENSIONS_AUDIO
+from lib.data_loader import parse_audio_contents
 from pages.layouts.visualiser.audio_upload import feature_extraction_opts
 
 # --- Setup audio-upload storage ---
@@ -54,52 +54,98 @@ upload_component = html.Div(
 
 
 # --- Main layout ---
-layout = dbc.Row(
-    [
-        storage_component,
-        upload_component,
-        feature_extraction_opts.layout,
-    ]
-)
-# ]
+layout = [
+    dbc.Row(
+        [
+            storage_component,
+            upload_component,
+            feature_extraction_opts.layout,
+        ]
+    )
+]
 
 
-# --- Callback 1: display feature extraction options ---
+# helper for callback 1: process feature methods and metavars
+def _process_opts(
+    feeature_extraction_method: str,
+    feature_opts: list,
+    feature_opts_values: list,
+    metavar_opts: list,
+    metavar_opts_values: list,
+    separator: str,
+):
+    print("Called process opts")
+    # NOTE: check lib.feature_extraction.FeatureExtractor for info on format
+    parsed_features_opts = {feeature_extraction_method: {}}
+    parsed_metavars_opts = {
+        "variables": [None] * len(metavar_opts),
+        "split_char": separator,
+    }
+
+    # Parse feature opts
+    i = 0
+    while i < len(feature_opts):
+        param_name = feature_opts[i]["id"]["id"]
+        parsed_features_opts[feeature_extraction_method][param_name] = (
+            feature_opts_values[i]
+        )
+
+    # Parse metavar opts
+    i = 0
+    while i < len(metavar_opts):
+        idx_var = metavar_opts[i]["id"]["id"]
+        varname = metavar_opts_values[i]
+
+        if varname == "" or varname is None:
+            varname == "-"  # Leave empty == ignore
+
+        parsed_metavars_opts["variables"][idx_var] = varname
+
+    print(f"parsed_feature_opts: {parsed_features_opts}")
+    print(f"parsed_metavars_opts: {parsed_metavars_opts}")
+    return parsed_features_opts, parsed_metavars_opts
+
+
+# --- Callback 1: feature extraction ---
 @callback(
     [
-        Output("audio-output", "children"),
-        Output("feature-extraction-opts-card", "style"),
-        Output("example-file-label", "children"),
+        Output("stored-data-audio", "data"),
+        Output("stored-metainformation-audio", "data"),
     ],
     [
-        Input("upload-audio", "filename"),
+        Input("extract-features-btn", "n_clicks"),
     ],
+    [
+        State("feature-extraction-algorithm", "value"),
+        State({"type": "feat-extr-param", "id": ALL}, "value"),
+        State("metavars-separator", "value"),
+        State({"type": "metavars-param", "id": ALL}, "value"),
+    ],
+    prevent_initial_call=True,
 )
-def display_feature_extraction_opts(filenames):
-    if not filenames:
+def extract_features(
+    n_clicks,
+    feat_extr_algo,
+    feat_extr_opts_vals,
+    separator,
+    metav_opts_vals,
+):
+    if n_clicks < 1:
         raise PreventUpdate
 
-    # Check that all .wav files
-    for fl in filenames:
-        if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
-            return (
-                dbc.Alert(
-                    f"{fl} filetype is not supported."
-                    + "\nSupported filetypes are: "
-                    + f"{', '.join(ALLOWED_EXTENSIONS_AUDIO)}",
-                    color="danger",
-                    dismissable=True,
-                ),
-                {"display": "none"},
-                "",
-            )
+    print("callback")
+    # Get the full states
+    feat_extr_states = dash.callback_context.states_list[-3]
+    metav_states = dash.callback_context.states_list[-1]
 
-    return (
-        dbc.Alert(
-            f"{len(filenames)} files uploaded",
-            color="success",
-            dismissable=True,
-        ),
-        {"display": "block"},
-        f"{filenames[0]}",
+    # Parse selected options
+    parsed_features, parsed_metav = _process_opts(
+        feeature_extraction_method=feat_extr_algo,
+        feature_opts=feat_extr_states,
+        feature_opts_values=feat_extr_opts_vals,
+        metavar_opts=metav_states,
+        metavar_opts_values=metav_opts_vals,
+        separator=separator,
     )
+
+    raise PreventUpdate

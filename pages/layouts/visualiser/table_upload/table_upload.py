@@ -105,13 +105,6 @@ def upload_table(
             )
 
     return (
-        dbc.Alert(
-            "No table uploaded yet",
-            color="info",
-            dismissable=True,
-        ),
+        [],
         None,
     )
-
-
-# --- Callback 2: update app-wide table and metavars ---

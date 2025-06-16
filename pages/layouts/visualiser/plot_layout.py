@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import polars as pl
-from sklearn.preprocessing import scale
 
 # local imports
 from lib.plotting import scatter_2d, scatter_3d
@@ -121,8 +120,7 @@ def _make_styling_dropdowns(
     """
     options = [{"label": "", "value": None}]
     if metavars:
-        options += [{"label": metavar, "value": metavar}
-                    for metavar in metavars]
+        options += [{"label": metavar, "value": metavar} for metavar in metavars]
 
     return dbc.Select(
         id=id,
@@ -421,8 +419,7 @@ def run_dim_reduction(
                 **parsed_kwargs,
             )
         else:
-            raise ValueError(
-                "Unknown dimensionality reduction algorithm specified.")
+            raise ValueError("Unknown dimensionality reduction algorithm specified.")
 
     except Exception as e:
         return (
@@ -648,8 +645,7 @@ def plot_update(
             else:
                 print("from plot callback - selected data:", selected_data)
                 fig.update_traces(
-                    selectedpoints=selected_data if len(
-                        selected_data) > 0 else None,
+                    selectedpoints=selected_data if len(selected_data) > 0 else None,
                 )
     # Set default dragmode
     fig.update_layout(

@@ -79,12 +79,6 @@ upload_sel_layout = dbc.Row(
 )
 
 
-# --- Layout audio ---
-layout_audio = [
-    audio_upload.layout,
-]
-
-
 # --- Main layout ---
 layout = dbc.Container(
     [
@@ -120,7 +114,7 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     if trigger_id == "upload-table-btn":
         return (table_upload.layout,)
     elif trigger_id == "upload-audio-btn":
-        return (layout_audio,)
+        return (audio_upload.layout,)
     else:
         raise PreventUpdate
 
