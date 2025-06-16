@@ -16,9 +16,9 @@ storage_components = html.Div(
     ]
 )
 
+# --- Upload ---
 upload_component = html.Div(
     [
-        html.Div(id="upload-audio"),
         dbc.Card(
             [
                 dbc.CardHeader(html.H4("Upload a table (.csv, .tsv, .xlxs)")),
@@ -51,7 +51,7 @@ upload_component = html.Div(
     ],
 )
 
-# --- Basic layout ---
+# --- Main layout ---
 layout = [
     dbc.Row(
         [

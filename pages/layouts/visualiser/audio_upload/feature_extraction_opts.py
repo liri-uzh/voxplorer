@@ -3,8 +3,6 @@ from dash import dcc, html, Input, Output, State, callback, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from lib.data_loader import parse_audio_contents
-
 
 # --- Helper functions ---
 def _split_example_file(sep: str, example_str: str):
@@ -291,104 +289,103 @@ sp_emb_opts = [
 
 
 # --- Feature extraction card ---
-feature_extraction_card = (
-    dbc.Card(
-        [
-            dbc.CardHeader(html.H4("Specify feature extraction")),
-            dbc.CardBody(
-                [
-                    dbc.Select(
-                        id="feature-extraction-algorithm",
-                        options=[
-                            {
-                                "label": "Mel features",
-                                "value": "mel_features",
-                            },
-                            {
-                                "label": "DNN speaker embeddings",
-                                "value": "speaker_embeddings",
-                            },
-                        ],
-                        value="mel",
-                    ),
-                    html.Div(
-                        id="feature-extraction-parameters",
-                        children=mel_opts,
-                    ),
-                    dcc.Interval(
-                        id="feature-extraction-params-delayed-update",
-                        interval=50,
-                        n_intervals=0,
-                        disabled=True,
-                    ),
-                ]
-            ),
-        ]
-    ),
+feature_extraction_card = dbc.Card(
+    [
+        dbc.CardHeader(html.H4("Specify feature extraction")),
+        dbc.CardBody(
+            [
+                dbc.Select(
+                    id="feature-extraction-algorithm",
+                    options=[
+                        {
+                            "label": "Mel features",
+                            "value": "mel_features",
+                        },
+                        {
+                            "label": "DNN speaker embeddings",
+                            "value": "speaker_embeddings",
+                        },
+                    ],
+                    value="mel_features",
+                ),
+                html.Div(
+                    id="feature-extraction-parameters",
+                    children=mel_opts,
+                ),
+                dcc.Interval(
+                    id="feature-extraction-params-delayed-update",
+                    interval=50,
+                    n_intervals=0,
+                    disabled=True,
+                ),
+            ]
+        ),
+    ]
 )
 
-metavars_card = (
-    dbc.Card(
-        [
-            dbc.CardHeader(html.H4("Specify how to extract metadata")),
-            dbc.CardBody(
-                [
-                    dbc.FormText(
-                        "Specify the separator character and then name"
-                        + " the metadata variables.\n"
-                        + "Use '-' to specify variables which should be ignored."
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Label(
-                                        "Example file: ",
-                                    ),
-                                    html.P(
-                                        "",
-                                        id="example-file-label",
-                                    ),
-                                ],
-                                width=3,
-                            ),
-                            dbc.Col(
-                                [
-                                    dbc.Label("Separator", width=2),
-                                    dbc.Input(
-                                        type="text",
-                                        value="_",
-                                        id="metavars-separator",
-                                    ),
-                                ],
-                                width=6,
-                            ),
-                        ],
-                    ),
-                    dbc.Row(
-                        html.Div(
-                            id="metavars-specification",
-                            children=[],
+
+# --- Metavars card ---
+metavars_card = dbc.Card(
+    [
+        dbc.CardHeader(html.H4("Specify how to extract metadata")),
+        dbc.CardBody(
+            [
+                dbc.FormText(
+                    "Specify the separator character and then name"
+                    + " the metadata variables.\n"
+                    + "Use '-' to specify variables which should be ignored."
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                dbc.Label(
+                                    "Example file: ",
+                                ),
+                                html.P(
+                                    "",
+                                    id="example-file-label",
+                                ),
+                            ],
+                            width=3,
                         ),
+                        dbc.Col(
+                            [
+                                dbc.Label("Separator", width=2),
+                                dbc.Input(
+                                    type="text",
+                                    value="_",
+                                    id="metavars-separator",
+                                ),
+                            ],
+                            width=6,
+                        ),
+                    ],
+                ),
+                dbc.Row(
+                    html.Div(
+                        id="metavars-specification",
+                        children=[],
                     ),
-                    dcc.Interval(
-                        id="metavars-specification-delayed-update",
-                        interval=50,
-                        n_intervals=0,
-                        disabled=True,
-                    ),
-                ],
-            ),
-        ],
-        className="mb-3",
-    ),
+                ),
+                dcc.Interval(
+                    id="metavars-specification-delayed-update",
+                    interval=50,
+                    n_intervals=0,
+                    disabled=True,
+                ),
+            ],
+        ),
+    ],
+    className="mb-3",
 )
+
 
 # --- Main layout ---
 layout = dbc.Row(
     [
-        feature_extraction_card[0],
-        metavars_card[0],
+        feature_extraction_card,
+        metavars_card,
         dbc.Button(
             "Extract features",
             id="extract-features-btn",
@@ -433,9 +430,9 @@ def update_feature_extraction_parameters(algorithm, n_intervals):
         if n_intervals < 1:
             raise PreventUpdate
 
-        if algorithm == "mel":
+        if algorithm == "mel_features":
             form_elements = mel_opts
-        elif algorithm == "sp_emb":
+        elif algorithm == "speaker_embeddings":
             form_elements = sp_emb_opts
         else:
             return (
@@ -480,7 +477,10 @@ def update_metavars_params(example_filename, separator, n_intervals):
         )
 
     # else create new container
-    elif trigger_id in {"metavars-specification-delayed-update", "example-file-label"}:
+    elif trigger_id in {
+        "metavars-specification-delayed-update",
+        "example-file-label",
+    }:
         try:
             tokens = _split_example_file(
                 sep=separator,

@@ -2,19 +2,15 @@
 # Visualiser mode #
 ###################
 
-import os
 import dash
 from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # local imports
-from lib.data_loader import (
-    ALLOWED_EXTENSIONS_AUDIO,
-)
 from pages.layouts.visualiser.table_upload import table_upload
+from pages.layouts.visualiser.audio_upload import audio_upload
 from pages.layouts.visualiser import (
-    feature_extraction_opts,
     table_preview,
     dimensionality_reduction_opts,
     plot_layout,
@@ -83,50 +79,9 @@ upload_sel_layout = dbc.Row(
 )
 
 
-# --- Layout upload audio ---
-layout_upload_audio = dbc.Row(
-    [
-        html.Div(id="upload-table"),
-        dbc.Card(
-            [
-                dbc.CardHeader(html.H4("Upload audio files (.wav)")),
-                dbc.CardBody(
-                    [
-                        dcc.Upload(
-                            id="upload-audio",
-                            children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A("Select audio files"),
-                                ]
-                            ),
-                            style={
-                                "width": "100%",
-                                "height": "60px",
-                                "lineHeight": "60px",
-                                "borderWidth": "1px",
-                                "borderStyle": "dashed",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
-                            },
-                            multiple=True,
-                        ),
-                        html.Div(id="audio-output", className="mt-3"),
-                    ]
-                ),
-            ]
-        ),
-    ],
-)
-
-
 # --- Layout audio ---
 layout_audio = [
-    layout_upload_audio,
-    feature_extraction_opts.layout,
-    table_preview.layout,
-    dimensionality_reduction_opts.layout,
-    plot_layout.layout,
+    audio_upload.layout,
 ]
 
 
@@ -178,8 +133,8 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     [
         Output("stored-table", "data"),
         Output("stored-metainformation", "data"),
-        Output("stored-data-table", "data", allow_duplicate=True),
-        Output("stored-metainformation-table", "data", allow_duplicate=True),
+        Output("stored-data-table", "clear_data"),
+        Output("stored-metainformation-table", "clear_data"),
     ],
     [
         Input("confirmed-selection-btn", "n_clicks"),
@@ -202,53 +157,7 @@ def promote_and_clear_temp_store(
     new_table = data_table or dash.no_update
     new_meta = metainformation_table or dash.no_update
 
-    # Clear memory used by temporary store components
-    cleared_table = None
-    cleared_meta = None
-
-    return new_table, new_meta, cleared_table, cleared_meta
-
-
-# TODO: this goes to the audio_upload layout
-# --- Callback 2b: display options ---
-@callback(
-    [
-        Output("audio-output", "children"),
-        Output("feature-extraction-opts-card", "style"),
-        Output("example-file-label", "children"),
-    ],
-    [
-        Input("upload-audio", "filename"),
-    ],
-)
-def display_feature_extraction_opts(filenames):
-    if not filenames:
-        raise PreventUpdate
-
-    # Check that all .wav files
-    for fl in filenames:
-        if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
-            return (
-                dbc.Alert(
-                    f"{fl} filetype is not supported."
-                    "\nSupported filetypes are: "
-                    + f"{', '.join(feature_extraction_opts.supported_filetypes)}",
-                    color="danger",
-                    dismissable=True,
-                ),
-                {"display": "none"},
-                "",
-            )
-
-    return (
-        dbc.Alert(
-            f"{len(filenames)} files uploaded",
-            color="success",
-            dismissable=True,
-        ),
-        {"display": "block"},
-        f"{filenames[0]}",
-    )
+    return new_table, new_meta, True, True
 
 
 # --- Callback 3: Synchronise table and plot selections ---
