@@ -50,7 +50,10 @@ layout = dbc.Row(
 )
 def display_columns_checklist(data_table):
     if data_table is None:
-        raise PreventUpdate
+        return (
+            {"display": "none"},
+            [],
+        )
 
     # get column names
     colnames = list(data_table[0].keys())

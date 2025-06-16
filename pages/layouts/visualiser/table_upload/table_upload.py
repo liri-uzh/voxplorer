@@ -10,9 +10,9 @@ from pages.layouts.visualiser.table_upload import metaconfig
 storage_components = html.Div(
     [
         # table storage
-        dcc.Store(id="stored-data-table", storage_type="session"),
+        dcc.Store(id="stored-data-table", storage_type="memory"),
         # metadata variables
-        dcc.Store(id="stored-metainformation-table", storage_type="session"),
+        dcc.Store(id="stored-metainformation-table", storage_type="memory"),
     ]
 )
 
