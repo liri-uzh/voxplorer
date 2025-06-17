@@ -110,35 +110,3 @@ def upload_table(
         [],
         None,
     )
-
-
-# --- Callback 2: update store components when data is uploaded ---
-@callback(
-    [
-        # TODO: might have to add allow_duplicate=True
-        Output("stored-table", "data"),
-        Output("stored-metainformation", "data"),
-        Output("stored-data-table", "clear_data"),
-        Output("stored-metainformation-table", "clear_data"),
-    ],
-    [
-        Input("confirmed-selection-btn", "n_clicks"),
-    ],
-    [
-        State("stored-data-table", "data"),
-        State("stored-metainformation-table", "data"),
-    ],
-    prevent_initial_call=True,
-)
-def promote_and_clear_temp_store(
-    n_clicks_table,
-    data_table,
-    metainformation_table,
-):
-    if data_table is None and metainformation_table is None:
-        raise PreventUpdate
-
-    new_table = data_table or dash.no_update
-    new_meta = metainformation_table or dash.no_update
-
-    return new_table, new_meta, True, True

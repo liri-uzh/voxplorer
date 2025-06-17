@@ -1,6 +1,6 @@
 import os
 import dash
-from dash import dcc, html, Input, Output, State, callback, ALL
+from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
@@ -376,36 +376,57 @@ layout = dbc.Row(
     ],
     [
         Input("upload-audio", "filename"),
+        Input("stored-data", "data"),
     ],
 )
-def display_feature_extraction_opts(filenames):
-    if not filenames:
+def display_feature_extraction_opts(
+    filenames,
+    data_table,
+):
+    ctx = dash.callback_context
+    if not ctx.triggered:
         raise PreventUpdate
 
-    # Check that all .wav files
-    for fl in filenames:
-        if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
-            return (
-                dbc.Alert(
-                    f"{fl} filetype is not supported."
-                    + "\nSupported filetypes are: "
-                    + f"{', '.join(ALLOWED_EXTENSIONS_AUDIO)}",
-                    color="danger",
-                    dismissable=True,
-                ),
-                {"display": "none"},
-                "",
-            )
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    return (
-        dbc.Alert(
-            f"{len(filenames)} files uploaded",
-            color="success",
-            dismissable=True,
-        ),
-        {"display": "block"},
-        f"{filenames[0]}",
-    )
+    if trigger_id == "upload-audio":
+        if not filenames:
+            raise PreventUpdate
+
+        # Check that all .wav files
+        for fl in filenames:
+            if not os.path.splitext(fl)[-1].lower() in ALLOWED_EXTENSIONS_AUDIO:
+                return (
+                    dbc.Alert(
+                        f"{fl} filetype is not supported."
+                        + "\nSupported filetypes are: "
+                        + f"{', '.join(ALLOWED_EXTENSIONS_AUDIO)}",
+                        color="danger",
+                        dismissable=True,
+                    ),
+                    {"display": "none"},
+                    "",
+                )
+
+        return (
+            dbc.Alert(
+                f"{len(filenames)} files uploaded",
+                color="success",
+                dismissable=True,
+            ),
+            {"display": "block"},
+            f"{filenames[0]}",
+        )
+
+    else:
+        if data_table is None:
+            raise PreventUpdate
+
+        return (
+            [],
+            {"display": "none"},
+            "",
+        )
 
 
 # --- Callback 2: update opts layout ---
@@ -514,39 +535,3 @@ def update_metavars_params(example_filename, separator, n_intervals):
         print("update metavars params called but did nothing")
         print(f"Trigger ID: {trigger_id}")
         raise PreventUpdate
-
-
-# TODO: --- Callback 3: feature extraction ---
-# @callback(
-#     [
-#         Output("tmp-features-table", "data"),
-#         Output("tmp-features-metainformation", "data"),
-#         Output("feature-extraction-output", "children"),
-#     ],
-#     [
-#         Input("extract-features-btn", "n_clicks"),
-#     ],
-#     [
-#         State("feature-extraction-algorithm", "value"),
-#         State({"type": "feat-extr-param", "id": ALL}, "value"),
-#         State("metavars-separator", "value"),
-#         State({"type": "metavars-param", "id": ALL}, "value"),
-#     ],
-#     suppress_initial_call=True,
-# )
-# def run_feature_extraction(
-#     n_clicks,
-#     feat_extr_algo,
-#     feat_extr_opts_vals,
-#     separator,
-#     metav_opts_vals,
-# ):
-#     print(n_clicks)
-#
-#     # Get options
-#     print(dash.callback_context.states_list)
-#
-#     raise PreventUpdate
-
-
-# TODO: make callback to clear temporary storage to avoid duplicate outputs

@@ -73,40 +73,64 @@ def parse_audio_contents(
             metavars=metavars,
         )
     except Exception as e:
-        return None, dbc.Alert(
-            e,
-            color="danger",
-            dismissable=True,
+        return (
+            None,
+            None,
+            dbc.Alert(
+                e,
+                color="danger",
+                dismissable=True,
+            ),
         )
 
     # Process the files
     try:
         features, metadata = fe.process_files()
     except Exception as e:
-        return None, dbc.Alert(
-            f"Error extracting features: {e}",
-            color="danger",
-            dismissable=True,
+        return (
+            None,
+            None,
+            dbc.Alert(
+                f"Error extracting features: {e}",
+                color="danger",
+                dismissable=True,
+            ),
         )
 
     # process metavariables and features in table
     try:
         data_table = pl.DataFrame(metadata | features)
     except Exception as e:
-        dbc.Alert(
-            f"Error while creating features table: {e}",
-            color="danger",
-            dismissable=True,
+        return (
+            None,
+            None,
+            dbc.Alert(
+                f"Error while creating features table: {e}",
+                color="danger",
+                dismissable=True,
+            ),
         )
 
     # Make JSON serialisable
     try:
         data_table = data_table.to_dicts()
     except Exception as e:
-        return None, dbc.Alert(
-            f"Failed to make JSON serializable: {e}",
-            color="danger",
-            dismissable=True,
+        return (
+            None,
+            None,
+            dbc.Alert(
+                f"Failed to make JSON serializable: {e}",
+                color="danger",
+                dismissable=True,
+            ),
         )
 
-    return data_table, None
+    return (
+        data_table,
+        list(metadata.keys()),
+        dbc.Alert(
+            f"Successfully extracted features from {len(filenames)} files.",
+            color="success",
+            dismissable=True,
+        ),
+    )

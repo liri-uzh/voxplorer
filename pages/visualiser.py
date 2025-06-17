@@ -119,6 +119,50 @@ def upload_choice(n_clicks_table, n_clicks_audio):
         raise PreventUpdate
 
 
+# --- Callback 2: update store components when data is uploaded ---
+@callback(
+    [
+        Output("stored-table", "data"),
+        Output("stored-metainformation", "data"),
+        Output("stored-data-table", "clear_data"),
+        Output("stored-metainformation-table", "clear_data"),
+        Output("stored-data-audio", "clear_data"),
+        Output("stored-metainformation-audio", "clear_data"),
+    ],
+    [
+        Input("confirmed-selection-btn", "n_clicks"),
+        Input("stored-data-audio", "data"),
+    ],
+    [
+        State("stored-data-table", "data"),
+        State("stored-metainformation-table", "data"),
+        State("stored-metainformation-audio", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def promote_and_clear_temp_store(
+    n_clicks_table,
+    data_audio,
+    data_table,
+    metainformation_table,
+    metainformation_audio,
+):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "confrimed-selection-btn":
+        if data_table is None and metainformation_table is None:
+            raise PreventUpdate
+
+        new_table = data_table or dash.no_update
+        new_meta = metainformation_table or dash.no_update
+
+        return new_table, new_meta, True, True
+
+
 # --- Callback 3: Synchronise table and plot selections ---
 @callback(
     [

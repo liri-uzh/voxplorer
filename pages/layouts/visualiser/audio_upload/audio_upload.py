@@ -110,11 +110,14 @@ def _process_opts(
     [
         Output("stored-data-audio", "data"),
         Output("stored-metainformation-audio", "data"),
+        Output("audio-output", "children", allow_duplicate=True),
     ],
     [
         Input("extract-features-btn", "n_clicks"),
     ],
     [
+        State("upload-audio", "contents"),
+        State("upload-audio", "filename"),
         State("feature-extraction-algorithm", "value"),
         State({"type": "feat-extr-param", "id": ALL}, "value"),
         State("metavars-separator", "value"),
@@ -124,6 +127,8 @@ def _process_opts(
 )
 def extract_features(
     n_clicks,
+    contents,
+    filenames,
     feat_extr_algo,
     feat_extr_opts_vals,
     separator,
@@ -146,7 +151,12 @@ def extract_features(
         separator=separator,
     )
 
-    print(f"parsed_feature_opts: {parsed_features}")
-    print(f"parsed_metavars_opts: {parsed_metav}")
+    # Extract features
+    data_table, metacols, alert = parse_audio_contents(
+        contents=contents,
+        filenames=filenames,
+        feature_extraction_args=parsed_features,
+        metavars=parsed_metav,
+    )
 
-    raise PreventUpdate
+    return data_table, metacols, alert
