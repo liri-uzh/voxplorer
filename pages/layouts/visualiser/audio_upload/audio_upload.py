@@ -74,7 +74,6 @@ def _process_opts(
     metavar_opts_values: list,
     separator: str,
 ):
-    print("Called process opts")
     # NOTE: check lib.feature_extraction.FeatureExtractor for info on format
     parsed_features_opts = {feeature_extraction_method: {}}
     parsed_metavars_opts = {
@@ -89,20 +88,20 @@ def _process_opts(
         parsed_features_opts[feeature_extraction_method][param_name] = (
             feature_opts_values[i]
         )
+        i += 1
 
     # Parse metavar opts
     i = 0
     while i < len(metavar_opts):
-        idx_var = metavar_opts[i]["id"]["id"]
+        idx_var = int(metavar_opts[i]["id"]["id"])
         varname = metavar_opts_values[i]
 
         if varname == "" or varname is None:
-            varname == "-"  # Leave empty == ignore
+            varname = "-"  # Leave empty == ignore
 
         parsed_metavars_opts["variables"][idx_var] = varname
+        i += 1
 
-    print(f"parsed_feature_opts: {parsed_features_opts}")
-    print(f"parsed_metavars_opts: {parsed_metavars_opts}")
     return parsed_features_opts, parsed_metavars_opts
 
 
@@ -133,7 +132,6 @@ def extract_features(
     if n_clicks < 1:
         raise PreventUpdate
 
-    print("callback")
     # Get the full states
     feat_extr_states = dash.callback_context.states_list[-3]
     metav_states = dash.callback_context.states_list[-1]
@@ -147,5 +145,8 @@ def extract_features(
         metavar_opts_values=metav_opts_vals,
         separator=separator,
     )
+
+    print(f"parsed_feature_opts: {parsed_features}")
+    print(f"parsed_metavars_opts: {parsed_metav}")
 
     raise PreventUpdate
