@@ -124,7 +124,7 @@ def extract_features(
     separator,
     metav_opts_vals,
 ):
-    if n_clicks < 1:
+    if n_clicks and n_clicks < 1:
         raise PreventUpdate
 
     # Get the full states

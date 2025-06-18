@@ -376,7 +376,7 @@ layout = dbc.Row(
     ],
     [
         Input("upload-audio", "filename"),
-        Input("stored-data", "data"),
+        Input("stored-table", "data"),
     ],
 )
 def display_feature_extraction_opts(
