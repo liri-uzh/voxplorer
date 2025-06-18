@@ -7,15 +7,6 @@ import dash_bootstrap_components as dbc
 from lib.data_loader import parse_audio_contents
 from pages.layouts.visualiser.audio_upload import feature_extraction_opts
 
-# --- Setup audio-upload storage ---
-storage_component = html.Div(
-    [
-        # data
-        dcc.Store(id="stored-data-audio", storage_type="memory"),
-        # metadata variables
-        dcc.Store(id="stored-metainformation-audio", storage_type="memory"),
-    ]
-)
 
 # --- Upload ---
 upload_component = html.Div(
@@ -57,7 +48,6 @@ upload_component = html.Div(
 layout = [
     dbc.Row(
         [
-            storage_component,
             upload_component,
             feature_extraction_opts.layout,
         ]

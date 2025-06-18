@@ -8,16 +8,6 @@ from lib.data_loader import parse_table_contents
 from pages.layouts.visualiser.table_upload import metaconfig
 
 
-# --- Setup table-upload storage ---
-storage_components = html.Div(
-    [
-        # table storage
-        dcc.Store(id="stored-data-table", storage_type="memory"),
-        # metadata variables
-        dcc.Store(id="stored-metainformation-table", storage_type="memory"),
-    ]
-)
-
 # --- Upload ---
 upload_component = html.Div(
     [
@@ -57,7 +47,6 @@ upload_component = html.Div(
 layout = [
     dbc.Row(
         [
-            storage_components,
             upload_component,
             metaconfig.layout,
         ]

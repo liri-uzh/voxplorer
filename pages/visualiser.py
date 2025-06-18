@@ -28,19 +28,17 @@ layout_storage = html.Div(
         dcc.Store(id="stored-table", storage_type="memory"),
         # table-spec storage for session
         dcc.Store(id="stored-metainformation", storage_type="memory"),
-        # FIXME: new layouts structure -> audio_upload
-        # feature extraction options
-        dcc.Store(id="stored-feature-extraction-opts", storage_type="memory"),
         # reduced dimensions table
         dcc.Store(id="stored-reduced-data", storage_type="memory"),
         # selected observations
         dcc.Store(id="selected-observations", storage_type="memory"),
-        # FIXME: new layouts structure -> audio_upload
-        # temporary table for feature extraction to avoid duplicate outputs in callbacks
-        dcc.Store(id="tmp-features-table", storage_type="memory"),
-        # FIXME: new layouts structure -> audio_upload
-        # temporary metavars for feature extraction to avoid duplicate outputs in callbacks
-        dcc.Store(id="tmp-features-metainformation", storage_type="memory"),
+        # Temporary tables based on upload
+        # table storage
+        dcc.Store(id="stored-data-table", storage_type="memory"),
+        dcc.Store(id="stored-metainformation-table", storage_type="memory"),
+        # audio storage
+        dcc.Store(id="stored-data-audio", storage_type="memory"),
+        dcc.Store(id="stored-metainformation-audio", storage_type="memory"),
     ]
 )
 
@@ -153,14 +151,32 @@ def promote_and_clear_temp_store(
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if trigger_id == "confrimed-selection-btn":
+    if trigger_id == "confirmed-selection-btn":
         if data_table is None and metainformation_table is None:
             raise PreventUpdate
 
         new_table = data_table or dash.no_update
         new_meta = metainformation_table or dash.no_update
 
-        return new_table, new_meta, True, True
+    elif trigger_id == "stored-data-audio":
+        if data_audio is None and metainformation_audio is None:
+            raise PreventUpdate
+
+        new_table = data_audio or dash.no_update
+        new_meta = metainformation_audio or dash.no_update
+
+    else:
+        print("Problem storing data: triggered by none")
+        raise PreventUpdate
+
+    return (
+        new_table,
+        new_meta,
+        True,
+        True,
+        True,
+        True,
+    )
 
 
 # --- Callback 3: Synchronise table and plot selections ---
