@@ -88,7 +88,13 @@ layout = html.Div(
 )
 def build_interactive_table(data_table, meta_columns):
     if data_table is None and meta_columns is None:
-        raise PreventUpdate
+        return (
+            [],
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "none"},
+        )
 
     # parse meta columns
     meta_columns = meta_columns if meta_columns is not None else []

@@ -419,7 +419,7 @@ layout = dbc.Row(
 )
 def display_dimreduction_opts(data_table, n_clicks):
     if data_table is None or n_clicks < 1:
-        raise PreventUpdate
+        return ({"display": "none"},)
 
     return ({"display": "block"},)
 

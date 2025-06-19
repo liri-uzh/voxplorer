@@ -88,17 +88,11 @@ def upload_table(
             filename,
         )
 
-        # Manage returns
-        if data_table is not None:
-            return (
-                dbc.Alert(
-                    f"{filename} uploaded successfully",
-                    color="success",
-                    dismissable=True,
-                ),
-                data_table,
-                upload_table_component(),
-            )
+        return (
+            alert,
+            data_table,
+            upload_table_component(),
+        )
 
     else:
         raise PreventUpdate

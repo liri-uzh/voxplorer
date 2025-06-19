@@ -55,7 +55,14 @@ def parse_table_contents(contents, filename):
             dismissable=True,
         )
 
-    return data_table, None
+    return (
+        data_table,
+        dbc.Alert(
+            f"{filename} uploaded successfully",
+            color="success",
+            dismissable=True,
+        ),
+    )
 
 
 def parse_audio_contents(
