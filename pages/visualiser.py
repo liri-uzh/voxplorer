@@ -82,7 +82,8 @@ layout = dbc.Container(
     [
         layout_storage,
         upload_sel_layout,
-        html.Div(id="data-mode-div"),
+        audio_upload.layout,
+        table_upload.layout,
         dimensionality_reduction_opts.layout,
         table_preview.layout,
         plot_layout.layout,
@@ -94,7 +95,8 @@ layout = dbc.Container(
 # --- Callback 1: choice of data mode ---
 @callback(
     [
-        Output("data-mode-div", "children"),
+        Output("upload-table-layout", "style"),
+        Output("upload-audio-layout", "style"),
     ],
     [
         Input("upload-table-btn", "n_clicks"),
@@ -110,9 +112,9 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "upload-table-btn":
-        return (table_upload.layout,)
+        return ({"display": "block"}, {"display": "none"})
     elif trigger_id == "upload-audio-btn":
-        return (audio_upload.layout,)
+        return ({"display": "none"}, {"display": "block"})
     else:
         raise PreventUpdate
 

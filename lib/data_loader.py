@@ -126,7 +126,8 @@ def parse_audio_contents(
         )
 
     return (
-        data_table,
+        # data_table,
+        None,
         list(metadata.keys()),
         dbc.Alert(
             f"Successfully extracted features from {len(filenames)} files.",

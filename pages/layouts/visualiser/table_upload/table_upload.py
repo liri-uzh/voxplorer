@@ -1,6 +1,4 @@
-import dash
 from dash import dcc, html, Input, Output, State, callback
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # Local
@@ -44,14 +42,14 @@ upload_component = html.Div(
 )
 
 # --- Main layout ---
-layout = [
-    dbc.Row(
-        [
-            upload_component,
-            metaconfig.layout,
-        ]
-    )
-]
+layout = dbc.Row(
+    [
+        upload_component,
+        metaconfig.layout,
+    ],
+    id="upload-table-layout",
+    style={"display": "none"},
+)
 
 
 # --- Callback 1: table upload ---
@@ -87,12 +85,6 @@ def upload_table(
                     dismissable=True,
                 ),
                 data_table,
-            )
-
-        else:
-            return (
-                alert,
-                None,
             )
 
     return (

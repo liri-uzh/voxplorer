@@ -45,14 +45,14 @@ upload_component = html.Div(
 
 
 # --- Main layout ---
-layout = [
-    dbc.Row(
-        [
-            upload_component,
-            feature_extraction_opts.layout,
-        ]
-    )
-]
+layout = dbc.Row(
+    [
+        upload_component,
+        feature_extraction_opts.layout,
+    ],
+    id="upload-audio-layout",
+    style={"display": "none"},
+)
 
 
 # helper for callback 1: process feature methods and metavars
