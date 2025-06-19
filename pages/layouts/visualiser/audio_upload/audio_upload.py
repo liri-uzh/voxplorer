@@ -8,6 +8,30 @@ from lib.data_loader import parse_audio_contents
 from pages.layouts.visualiser.audio_upload import feature_extraction_opts
 
 
+def upload_audio_component():
+    return [
+        dcc.Upload(
+            id="upload-audio",
+            children=html.Div(
+                [
+                    "Drag and drop or ",
+                    html.A("Select audio files"),
+                ]
+            ),
+            style={
+                "width": "100%",
+                "height": "60px",
+                "lineHeight": "60px",
+                "borderWidth": "1px",
+                "borderStyle": "dashed",
+                "borderRadius": "5px",
+                "textAlign": "center",
+            },
+            multiple=True,
+        )
+    ]
+
+
 # --- Upload ---
 upload_component = html.Div(
     [
@@ -16,24 +40,9 @@ upload_component = html.Div(
                 dbc.CardHeader(html.H4("Upload audio files. (.wav, .flac, .mp3)")),
                 dbc.CardBody(
                     [
-                        dcc.Upload(
-                            id="upload-audio",
-                            children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A("Select audio files"),
-                                ]
-                            ),
-                            style={
-                                "width": "100%",
-                                "height": "60px",
-                                "lineHeight": "60px",
-                                "borderWidth": "1px",
-                                "borderStyle": "dashed",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
-                            },
-                            multiple=True,
+                        html.Div(
+                            id="upload-audio-component",
+                            children=upload_audio_component(),
                         ),
                         html.Div(id="audio-output", className="mt-3"),
                     ]
@@ -101,6 +110,7 @@ def _process_opts(
         Output("stored-data-audio", "data"),
         Output("stored-metainformation-audio", "data"),
         Output("audio-output", "children", allow_duplicate=True),
+        Output("upload-audio-component", "children", allow_duplicate=True),
     ],
     [
         Input("extract-features-btn", "n_clicks"),
@@ -149,4 +159,4 @@ def extract_features(
         metavars=parsed_metav,
     )
 
-    return data_table, metacols, alert
+    return data_table, metacols, alert, upload_audio_component()

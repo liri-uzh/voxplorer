@@ -97,6 +97,10 @@ layout = dbc.Container(
     [
         Output("upload-table-layout", "style"),
         Output("upload-audio-layout", "style"),
+        Output("upload-table-component", "children"),
+        Output("upload-audio-component", "children"),
+        Output("stored-table", "clear_data"),
+        Output("stored-metainformation", "clear_data"),
     ],
     [
         Input("upload-table-btn", "n_clicks"),
@@ -112,9 +116,23 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "upload-table-btn":
-        return ({"display": "block"}, {"display": "none"})
+        return (
+            {"display": "block"},
+            {"display": "none"},
+            table_upload.upload_table_component(),
+            audio_upload.upload_audio_component(),
+            True,
+            True,
+        )
     elif trigger_id == "upload-audio-btn":
-        return ({"display": "none"}, {"display": "block"})
+        return (
+            {"display": "none"},
+            {"display": "block"},
+            table_upload.upload_table_component(),
+            audio_upload.upload_audio_component(),
+            True,
+            True,
+        )
     else:
         raise PreventUpdate
 
