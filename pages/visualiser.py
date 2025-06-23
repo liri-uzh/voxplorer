@@ -47,7 +47,8 @@ layout_storage = html.Div(
 upload_sel_layout = dbc.Row(
     dbc.Card(
         [
-            dbc.CardHeader(html.H4("Upload pre-computed table or feature extraction?")),
+            dbc.CardHeader(
+                html.H4("Upload pre-computed table or feature extraction?")),
             dbc.CardBody(
                 dbc.Row(
                     [
@@ -97,8 +98,8 @@ layout = dbc.Container(
     [
         Output("upload-table-layout", "style"),
         Output("upload-audio-layout", "style"),
-        Output("upload-table-component", "children"),
-        Output("upload-audio-component", "children"),
+        Output("upload-table-component", "children", allow_duplicate=True),
+        Output("upload-audio-component", "children", allow_duplicate=True),
         Output("stored-table", "clear_data"),
         Output("stored-metainformation", "clear_data"),
     ],
@@ -106,6 +107,7 @@ layout = dbc.Container(
         Input("upload-table-btn", "n_clicks"),
         Input("upload-audio-btn", "n_clicks"),
     ],
+    prevent_initial_call=True,
 )
 def upload_choice(n_clicks_table, n_clicks_audio):
     ctx = dash.callback_context
@@ -176,6 +178,7 @@ def promote_and_clear_temp_store(
             raise PreventUpdate
 
         new_table = data_table or dash.no_update
+        print(metainformation_table)
         new_meta = metainformation_table or dash.no_update
 
     elif trigger_id == "stored-data-audio":
@@ -183,6 +186,7 @@ def promote_and_clear_temp_store(
             raise PreventUpdate
 
         new_table = data_audio or dash.no_update
+        print(metainformation_audio)
         new_meta = metainformation_audio or dash.no_update
 
     else:
@@ -199,49 +203,109 @@ def promote_and_clear_temp_store(
     )
 
 
-# --- Callback 3: Synchronise table and plot selections ---
+# # --- Callback 3: Synchronise table and plot selections ---
+# @callback(
+#     [
+#         Output("selected-observations", "data"),
+#     ],
+#     [
+#         Input("interactive-table", "selected_rows"),
+#         Input("plot", "selectedData"),
+#     ],
+#     [
+#         State("selected-observations", "data"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# def sync_table_and_plot(
+#     table_selected_rows,
+#     plot_selected_data,
+#     selected_data,
+# ):
+#     print("\n")
+#     print("-----")
+#     ctx = dash.callback_context
+#     if not ctx.triggered:
+#         raise PreventUpdate
+#
+#     # Get ID of trigger
+#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#     print("Triggered by:", trigger_id)
+#
+#     # Get current table data and selected rows
+#     if trigger_id == "interactive-table":
+#         if selected_data and set(selected_data) == set(table_selected_rows):
+#             raise PreventUpdate
+#         else:
+#             print("new table selections:", table_selected_rows)
+#             return (table_selected_rows,)
+#     elif trigger_id == "plot":
+#         if plot_selected_data:
+#             print(plot_selected_data)
+#             plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
+#             if selected_data and set(selected_data) == set(plot_selected_rows):
+#                 raise PreventUpdate
+#             else:
+#                 print("new plot selections:", plot_selected_rows)
+#                 return (plot_selected_rows,)
+#         else:
+#             return ([],)
+
+
+# --- Callback 3: sync selected data ---
 @callback(
     [
         Output("selected-observations", "data"),
+        Output("plot", "figure"),
+        Output("interactive-table", "selected_rows"),
     ],
     [
-        Input("interactive-table", "selected_rows"),
         Input("plot", "selectedData"),
+        Input("interactive-table", "selected-rows"),
     ],
     [
-        State("selected-observations", "data"),
+        State("plot", "figure"),
+        State("stored-table", "data"),
     ],
+    prevent_initial_call=True,
 )
-def sync_table_and_plot(
-    table_selected_rows,
-    plot_selected_data,
-    selected_data,
+def sync_selected_data(
+    plot_selected,
+    table_selected,
+    fig,
+    data_table,
 ):
-    print("\n")
-    print("-----")
     ctx = dash.callback_context
+
     if not ctx.triggered:
         raise PreventUpdate
 
-    # Get ID of trigger
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("Triggered by:", trigger_id)
+    if data_table is None:
+        raise PreventUpdate
 
-    # Get current table data and selected rows
-    if trigger_id == "interactive-table":
-        if selected_data and set(selected_data) == set(table_selected_rows):
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "plot":
+        if plot_selected:
+            selected = [p["pointIndex"] for p in plot_selected["points"]]
+        # TODO: add option for click-data / check how it works...
+        else:
+            print(f"Error getting selected points from plot: {plot_selected}")
             raise PreventUpdate
+
+    elif trigger_id == "interactive-table":
+        if table_selected:
+            selected = table_selected
         else:
-            print("new table selections:", table_selected_rows)
-            return (table_selected_rows,)
-    elif trigger_id == "plot":
-        if plot_selected_data:
-            print(plot_selected_data)
-            plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
-            if selected_data and set(selected_data) == set(plot_selected_rows):
-                raise PreventUpdate
-            else:
-                print("new plot selections:", plot_selected_rows)
-                return (plot_selected_rows,)
-        else:
-            return ([],)
+            print(f"Error getting selected points from table: {
+                  table_selected}")
+    else:
+        print(f"Error syncing selection: trigger_id is {trigger_id}")
+
+    return (
+        selected,
+        fig.update_traces(
+            selectedpoints=selected if len(selected) > 0 else None,
+        ),
+        selected,
+    )    # TODO: finish this callback and clean up other callbacks

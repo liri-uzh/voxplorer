@@ -12,7 +12,7 @@ layout = dbc.Row(
                     [
                         html.Div(
                             id="columns-checklist-container",
-                            children=[],
+                            children=[dbc.Checklist(id="meta-columns-checklist")],
                         ),
                         dbc.Button(
                             "Confirm selection",

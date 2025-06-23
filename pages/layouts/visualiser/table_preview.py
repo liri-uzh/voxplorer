@@ -64,7 +64,10 @@ layout = html.Div(
         ),
         dbc.Row(
             dbc.Col(
-                html.Div(id="interactive-data-container"),
+                html.Div(
+                    id="interactive-data-container",
+                    children=[dash_table.DataTable(id="interactive-table")],
+                ),
                 width=12,
             )
         ),
@@ -143,7 +146,7 @@ def build_interactive_table(data_table, meta_columns):
 
         return (
             dbc.Card(
-                dbc.CardBody(html.Div(interactive_table, style={"width": "100%"})),
+                dbc.CardBody(interactive_table),
                 className="mt-4",
             ),
             {"display": "block"},
@@ -181,7 +184,7 @@ def build_interactive_table(data_table, meta_columns):
         State("interactive-table", "derived_virtual_data"),
         State("interactive-table", "selected_rows"),
     ],
-    suppress_initial_call=True,
+    prevent_initial_call=True,
 )
 def select_deselect_all(
     select_n_clicks,
@@ -260,7 +263,7 @@ def download_all(n_clicks, data_table):
     ],
     [
         State("stored-table", "data"),
-        State("selected-observations", "data"),
+        State("se#lected-observations", "data"),
     ],
     prevent_initial_call=True,
 )

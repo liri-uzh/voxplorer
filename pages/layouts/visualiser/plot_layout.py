@@ -330,7 +330,7 @@ layout = html.Div(
         State("num-dimensions", "value"),
         State({"type": "dim-red-param", "id": ALL}, "value"),
     ],
-    suppress_initial_call=True,
+    prevent_initial_call=True,
 )
 def run_dim_reduction(
     n_clicks,
@@ -340,15 +340,22 @@ def run_dim_reduction(
     n_components,
     values,
 ):
+    print("\nIn run_dim_reduction\n" + "-" * 10)
     if (not n_clicks) or (data_table is None) or (metavars is None):
+        print("something is None")
+        print(f"n_clicks: {n_clicks}")
+        print(f"data_table: {type(data_table)}")
+        print(f"metavars: {metavars}")
         raise PreventUpdate
 
     try:
         # Get algorithm specific params
         algo_opts = arg_opts[algorithm]["params"]
+        print(f"algo_opts: {algo_opts}\n")
 
         # Extract input params
         input_params = dash.callback_context.states_list[-1]
+        print(f"input_params: {input_params}")
 
         # Init parsed kwargs dict
         parsed_kwargs = {}
@@ -377,6 +384,7 @@ def run_dim_reduction(
 
             # Always increse i (if custom we want to skip next)
             i += 1
+
     except Exception as e:
         return (
             None,
@@ -388,7 +396,7 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
-
+    print("Finished parsing options\n")
     try:
         # Prepare data for dimensionality reduction
         X = _prep_data_dim_red(data=data_table, metavars=metavars)
@@ -432,6 +440,7 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
+    print("Extracted dimensions\n")
 
     try:
         # Reconcatenate reducded data and metavars
@@ -447,6 +456,9 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
+
+    print("Reconstructed data.\n")
+    print(f"new_data: {pl.DataFrame(new_data).head()}")
 
     return (
         new_data,
@@ -537,6 +549,7 @@ def create_style_dropdowns(
         State("dim-reduction-algorithm", "value"),
         State("plot", "selectedData"),
     ],
+    prevent_initial_call=True,
 )
 def plot_update(
     n_clicks,
