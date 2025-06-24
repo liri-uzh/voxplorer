@@ -15,7 +15,7 @@ import plotly.express as px
 import polars as pl
 
 # local imports
-from lib.plotting import scatter_2d, scatter_3d
+from lib.plotting import scatter_2d  # TODO: scatter_3d
 from lib.dimensionality_reduction import (
     pca_reduction,
     mds_reduction,
@@ -174,8 +174,8 @@ layout = html.Div(
                     dcc.Graph(
                         id="plot",
                         style={
-                            "width": "90vh",
-                            "height": "90vh",
+                            "width": "110vh",
+                            "height": "110vh",
                         },
                         config={
                             "displayModeBar": True,
@@ -341,22 +341,15 @@ def run_dim_reduction(
     n_components,
     values,
 ):
-    print("\nIn run_dim_reduction\n" + "-" * 10)
     if (not n_clicks) or (data_table is None) or (metavars is None):
-        print("something is None")
-        print(f"n_clicks: {n_clicks}")
-        print(f"data_table: {type(data_table)}")
-        print(f"metavars: {metavars}")
         raise PreventUpdate
 
     try:
         # Get algorithm specific params
         algo_opts = arg_opts[algorithm]["params"]
-        print(f"algo_opts: {algo_opts}\n")
 
         # Extract input params
         input_params = dash.callback_context.states_list[-1]
-        print(f"input_params: {input_params}")
 
         # Init parsed kwargs dict
         parsed_kwargs = {}
@@ -397,7 +390,6 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
-    print("Finished parsing options\n")
     try:
         # Prepare data for dimensionality reduction
         X = _prep_data_dim_red(data=data_table, metavars=metavars)
@@ -441,7 +433,6 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
-    print("Extracted dimensions\n")
 
     try:
         # Reconcatenate reducded data and metavars
@@ -457,9 +448,6 @@ def run_dim_reduction(
             {"display": "none"},
             {"display": "none"},
         )
-
-    print("Reconstructed data.\n")
-    print(f"new_data: {pl.DataFrame(new_data).head()}")
 
     return (
         new_data,
@@ -543,7 +531,6 @@ def create_style_dropdowns(
         Input("theme-dropdown", "value"),
     ],
     [
-        State("selected-observations", "data"),
         State("stored-reduced-data", "data"),
         State("stored-metainformation", "data"),
         State("num-dimensions", "value"),
@@ -557,7 +544,6 @@ def plot_update(
     symbol,
     color_map,
     template,
-    selected_data,
     reduced_data,
     metavars,
     n_components,
@@ -566,6 +552,11 @@ def plot_update(
     ctx = dash.callback_context
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     print("from plot callback - trigger:", trigger_id)
+    print(f"color: {color}")
+    print(f"symbol: {symbol}")
+    print(f"color_map: {color_map}")
+    print(f"template: {template}")
+    # FIXME: choosing these sometimes works sometimes not
 
     if (not n_clicks) or (reduced_data is None):
         raise PreventUpdate
@@ -582,38 +573,48 @@ def plot_update(
             df = df.cast({symbol: pl.String})
 
         if n_components == 2:
+            # fig = scatter_2d(
+            #     df=df,
+            #     x="DIM1",
+            #     y="DIM2",
+            #     hover_data=[col for col in metavars if col in df.columns]
+            #     if metavars
+            #     else None,
+            #     color=color if color else None,
+            #     symbol=symbol if symbol else None,
+            #     color_discrete_sequence=color_opts[color_map],
+            #     template=template,
+            #     title=title,
+            #     height=None,
+            #     width=1080,
+            # )
             fig = scatter_2d(
-                df=df,
+                data=df,
                 x="DIM1",
                 y="DIM2",
-                hover_data=[col for col in metavars if col in df.columns]
-                if metavars
-                else None,
-                color=color if color else None,
-                symbol=symbol if symbol else None,
+                color=color,
+                symbol=symbol,
                 color_discrete_sequence=color_opts[color_map],
                 template=template,
                 title=title,
-                height=None,
-                width=1080,
             )
-        elif n_components == 3:
-            fig = scatter_3d(
-                df=df,
-                x="DIM1",
-                y="DIM2",
-                z="DIM3",
-                hover_data=[col for col in metavars if col in df.columns]
-                if metavars
-                else None,
-                color=color if color else None,
-                symbol=symbol if symbol else None,
-                color_discrete_sequence=color_opts[color_map],
-                template=template,
-                title=title,
-                height=None,
-                width=1080,
-            )
+        # elif n_components == 3:
+        #     fig = scatter_3d(
+        #         df=df,
+        #         x="DIM1",
+        #         y="DIM2",
+        #         z="DIM3",
+        #         hover_data=[col for col in metavars if col in df.columns]
+        #         if metavars
+        #         else None,
+        #         color=color if color else None,
+        #         symbol=symbol if symbol else None,
+        #         color_discrete_sequence=color_opts[color_map],
+        #         template=template,
+        #         title=title,
+        #         height=None,
+        #         width=1080,
+        #     )
         else:
             return (
                 None,
@@ -633,19 +634,19 @@ def plot_update(
             ),
         )
 
-    # Update customdata
-    # FIXME: bug--> when color or symbol pointIndex does not match anymore
-    # TODO: possible solution using go.Scatter and customdata?
-    if selected_data is not None:
-        fig.update_traces(
-            selectedpoints=selected_data if len(selected_data) > 0 else None,
-        )
+    # # Update customdata
+    # # FIXME: bug--> when color or symbol pointIndex does not match anymore
+    # # TODO: possible solution using go.Scatter and customdata?
+    # print(f"selected_data: {selected_data}")
+    # if selected_data is not None:
+    #     fig.update_traces(
+    #         selectedpoints=selected_data if len(selected_data) > 0 else None,
+    #     )
 
     # Set default dragmode
     fig.update_layout(
         dragmode="select",
     )
-    print("ready to return")
     return (
         fig,
         None,

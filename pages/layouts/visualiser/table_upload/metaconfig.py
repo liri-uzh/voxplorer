@@ -52,7 +52,7 @@ def display_columns_checklist(data_table):
     if data_table is None:
         return (
             {"display": "none"},
-            [],
+            [dbc.Checklist(id="meta-columns-checklist")],
         )
 
     # get column names

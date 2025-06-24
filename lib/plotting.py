@@ -1,291 +1,106 @@
-"""Plotting module.
-This module contains functions to plot different types of plots using Plotly Express.
-It requires the `plotly` package to be installed.
-Almost all functions take in a feature matrix `X` and a target vector `y` as input.
-The `X` matrix is assumed to contain all features, while the target vecor `y` is
-assumed to contain categorical information (or colouring) information about the data.
+"""Plotting module for dash app."""
 
-Functions
----------
-scatter_2d(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot 2D scatter plot.
-scatter_3d(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot 3D scatter plot.
-line_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot line plot.
-bar_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot bar plot.
-histogram(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot histogram.
-box_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs)
-    Plot box plot.
-heatmap(X: np.ndarray, z: np.ndarray, title: str = None, **kwargs)
-    Plot heatmap.
-
-Raises
-------
-ImportError if the `plotly` package is not installed.
-ValueError if the dimensions of the input data are too small to plot.
-ValueWarning if the input data is not in the correct format.
-"""
-
-# Imports
-from typing_extensions import Union
-import numpy as np
-import plotly.express as px
 import polars as pl
-import warnings
+import plotly.graph_objects as go
+from typing import Union, Sequence
 
 
 def scatter_2d(
-    df: Union[dict, pl.DataFrame],
+    data: Union[dict, pl.DataFrame],
     x: str,
     y: str,
-    width=1080,
-    height=1080,
-    **kwargs,
-):
-    """Plot 2D scatter plot.
+    width: int = 1080,
+    height: int = 1080,
+    color: str = None,
+    symbol: str = None,
+    color_discrete_sequence: Sequence[str] = None,
+    hover_data: Sequence[str] = None,
+    title: str = None,
+    template: str = None,
+) -> go.Figure:
+    if isinstance(data, pl.DataFrame):
+        df = data.to_pandas()
+    else:
+        import pandas as pd
 
-    Parameters
-    -----------
-    df: dict|polars.DataFrame
-        Dataframe-like dictionary or polars DataFrame.
-    x: str
-        Column name for x-axis.
-    y: str
-        Column name for y-axis.
-    width: int
-        The figure's width in pixels. Default=1080.
-    height: int
-        The figure's height in pixels. Default=1080.
-    **kwargs: dict
-        Additional keyword arguments.
+        df = pd.DataFrame(data)
 
-    Returns
-    --------
-    fig: plotly.graph_objs.Figure
-        Plotly figure object.
-    """
-    if df is None:
-        raise ValueError("No data!")
+    # Get grouping keys
+    group_cols = []
+    if color:
+        group_cols.append(color)
+    if symbol:
+        group_cols.append(symbol)
 
-    fig = px.scatter(
-        data_frame=df,
-        x=x,
-        y=y,
-        height=height,
+    # Build figure
+    fig = go.Figure()
+    if group_cols:
+        grouped = df.groupby(group_cols, dropna=False)
+    else:
+        grouped = [(None, df)]
+
+    # Prep maps
+    palette = color_discrete_sequence or ["#636efa", "#EF553B", "#00cc96", "#ab63fa"]
+    symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x"]
+    unique_colors = df[color].dropna().unique() if color else []
+    unique_symbols = df[symbol].dropna().unique() if symbol else []
+
+    # Trace
+    for grp, subdf in grouped:
+        if grp is None:
+            name = ""
+        elif isinstance(grp, tuple):
+            name = " | ".join(str(g) for g in grp)
+        else:
+            name = str(grp)
+
+        # Markers
+        mk = dict(size=8, opacity=0.8)
+        if color and color in subdf.columns:
+            i = list(unique_colors).index(grp if not isinstance(grp, tuple) else grp[0])
+            mk["color"] = palette[i % len(palette)]
+
+        if symbol and symbol in subdf.columns:
+            j = list(unique_symbols).index(
+                grp if not isinstance(grp, tuple) else grp[0]
+            )
+            mk["symbol"] = symbols[j % len(palette)]
+
+        # Hover template
+        if hover_data:
+            cd = subdf[hover_data].values
+            print(f"customdata: {cd[:5]}")
+            hint = (
+                "<br>".join(
+                    [f"{c}: %{{customdata[{k}]}}" for k, c in enumerate(hover_data)]
+                )
+                + "<extra></extra>"
+            )
+            print(f"hint: {hint}")
+        else:
+            cd = None
+            hint = None
+
+        fig.add_trace(
+            go.Scatter(
+                x=subdf[x],
+                y=subdf[y],
+                mode="markers",
+                name=name,
+                marker=mk,
+                customdata=cd,
+                hovertemplate=hint,
+                selected=dict(marker=dict(opacity=1)),
+                unselected=dict(marker=dict(opacity=0.2)),
+            )
+        )
+
+    # Final touches
+    fig.update_layout(
+        title=title,
+        template=template,
         width=width,
-        **kwargs,
+        height=height,
     )
 
-    return fig
-
-
-def scatter_3d(
-    df: Union[dict, pl.DataFrame],
-    x: str,
-    y: str,
-    z: str,
-    width=1080,
-    height=1080,
-    **kwargs,
-):
-    """Plot 3D scatter plot.
-
-    Parameters
-    -----------
-    df: dict|polars.DataFrame
-        Dataframe-like dictionary or polars DataFrame.
-    x: str
-        Column name for x-axis.
-    y: str
-        Column name for y-axis.
-    z: str
-        Column name for z-axis.
-    width: int
-        The figure's width in pixels. Default=1080.
-    height: int
-        The figure's height in pixels. Default=1080.
-    **kwargs: dict
-        Additional keyword arguments.
-    """
-    if df is None:
-        raise ValueError("No data!")
-
-    fig = px.scatter_3d(
-        data_frame=df,
-        x=x,
-        y=y,
-        z=z,
-        height=height,
-        width=width,
-        **kwargs,
-    )
-
-    return fig
-
-
-def line_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs):
-    """Plot line plot.
-
-    Parameters
-    -----------
-    X: np.ndarray
-        Feature matrix (2D array).
-    y: np.ndarray
-        Target vector.
-    title: str
-        Plot title.
-    **kwargs: dict
-        Additional keyword arguments.
-
-    Returns
-    --------
-    fig: plotly.graph_objs.Figure
-        Plotly figure object.
-    """
-    if X.shape[1] != 2:
-        if X.shape[1] < 2:
-            warnings.warn(
-                "ValueWarning: Input data is not 2D. Plotting first two dimensions."
-            )
-            X = X[:, :2]
-        else:
-            raise ValueError("Input data is not 2D. Unable to plot.")
-    fig = px.line(x=X[:, 0], y=X[:, 1], color=y, title=title, **kwargs)
-    return fig
-
-
-def bar_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs):
-    """Plot bar plot.
-
-    Parameters
-    -----------
-    X: np.ndarray
-        Feature matrix (2D array).
-    y: np.ndarray
-        Target vector.
-    title: str
-        Plot title.
-    **kwargs: dict
-        Additional keyword arguments.
-
-    Returns
-    --------
-    fig: plotly.graph_objs.Figure
-        Plotly figure object.
-    """
-    if X.shape[1] != 2:
-        if X.shape[1] < 2:
-            warnings.warn(
-                "ValueWarning: Input data is not 2D. Plotting first two dimensions."
-            )
-            X = X[:, :2]
-        else:
-            raise ValueError("Input data is not 2D. Unable to plot.")
-    fig = px.bar(x=X[:, 0], y=X[:, 1], color=y, title=title, **kwargs)
-    return fig
-
-
-def histogram(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs):
-    """Plot histogram.
-
-    Parameters
-    -----------
-    X: np.ndarray
-        Feature matrix (1D array).
-    y: np.ndarray
-        Target vector.
-    title: str
-        Plot title.
-    **kwargs: dict
-        Additional keyword arguments.
-    """
-    if X.shape[1] != 1:
-        if X.shape[1] < 1:
-            warnings.warn(
-                "ValueWarning: Input data is not 1D. Plotting first dimension."
-            )
-            X = X[:, :1]
-        else:
-            raise ValueError("Input data is not 1D. Unable to plot.")
-    fig = px.histogram(x=X, color=y, title=title, **kwargs)
-    return fig
-
-
-def box_plot(X: np.ndarray, y: np.ndarray = None, title: str = None, **kwargs):
-    """Plot box plot.
-
-    Parameters
-    -----------
-    X: np.ndarray
-        Feature matrix (2D array).
-    y: np.ndarray
-        Target vector.
-    title: str
-        Plot title.
-    **kwargs: dict
-        Additional keyword arguments.
-
-    Returns
-    --------
-    fig: plotly.graph_objs.Figure
-        Plotly figure object.
-    """
-    if X.shape[1] != 2:
-        if X.shape[1] < 2:
-            warnings.warn(
-                "ValueWarning: Input data is not 2D. Plotting first two dimensions."
-            )
-            X = X[:, :2]
-        else:
-            raise ValueError("Input data is not 2D. Unable to plot.")
-    fig = px.box(x=X[:, 0], y=X[:, 1], color=y, title=title, **kwargs)
-    return fig
-
-
-# def choropleth_map():
-#     """Plot choropleth map."""
-#     pass
-
-
-def heatmap(X: np.ndarray, z: np.ndarray, title: str = None, **kwargs):
-    """Plot heatmap.
-
-    Parameters
-    -----------
-    X: np.ndarray
-        Feature matrix (2D array). Co-ordinates.
-    z: np.ndarray
-        Target vector. Values.
-    title: str
-        Plot title.
-    **kwargs: dict
-        Additional keyword arguments.
-
-    Returns
-    --------
-    fig: plotly.graph_objs.Figure
-        Plotly figure object.
-    """
-    if X.shape[1] != 2:
-        if X.shape[1] < 2:
-            warnings.warn(
-                "ValueWarning: Input data is not 2D. Plotting first two dimensions."
-            )
-            X = X[:, :2]
-        else:
-            raise ValueError("Input data is not 2D. Unable to plot.")
-    if z.shape[0] != X.shape[0]:
-        raise ValueError("Input data dimensions do not match. Unable to plot.")
-    if len(z.shape) != 1 and not z.shape[1] == 1:
-        if z.shape[1] > 1:
-            warnings.warn(
-                "ValueWarning: Input data (z) is not 1D. Plotting first dimension."
-            )
-            z = z[:, 0]
-        else:
-            raise ValueError("Input data (z) is not 1D. Unable to plot.")
-    fig = px.density_heatmap(x=X[:, 0], y=X[:, 1], z=z, title=title, **kwargs)
     return fig
