@@ -35,7 +35,6 @@ layout_storage = html.Div(
         # Temporary tables based on upload
         # table storage
         dcc.Store(id="stored-data-table", storage_type="memory"),
-        dcc.Store(id="stored-metainformation-table", storage_type="memory"),
         # audio storage
         dcc.Store(id="stored-data-audio", storage_type="memory"),
         dcc.Store(id="stored-metainformation-audio", storage_type="memory"),
@@ -47,8 +46,7 @@ layout_storage = html.Div(
 upload_sel_layout = dbc.Row(
     dbc.Card(
         [
-            dbc.CardHeader(
-                html.H4("Upload pre-computed table or feature extraction?")),
+            dbc.CardHeader(html.H4("Upload a table or upload audio files")),
             dbc.CardBody(
                 dbc.Row(
                     [
@@ -145,7 +143,6 @@ def upload_choice(n_clicks_table, n_clicks_audio):
         Output("stored-table", "data"),
         Output("stored-metainformation", "data"),
         Output("stored-data-table", "clear_data"),
-        Output("stored-metainformation-table", "clear_data"),
         Output("stored-data-audio", "clear_data"),
         Output("stored-metainformation-audio", "clear_data"),
     ],
@@ -155,7 +152,7 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     ],
     [
         State("stored-data-table", "data"),
-        State("stored-metainformation-table", "data"),
+        State("meta-columns-checklist", "value"),
         State("stored-metainformation-audio", "data"),
     ],
     prevent_initial_call=True,
@@ -174,6 +171,7 @@ def promote_and_clear_temp_store(
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "confirmed-selection-btn":
+        print(f"metainformation_table: {metainformation_table}")
         if data_table is None and metainformation_table is None:
             raise PreventUpdate
 
@@ -192,11 +190,10 @@ def promote_and_clear_temp_store(
     else:
         print("Problem storing data: triggered by none")
         raise PreventUpdate
-
+    print(f"Metadata update: {new_meta}")
     return (
         new_table,
         new_meta,
-        True,
         True,
         True,
         True,
@@ -256,12 +253,12 @@ def promote_and_clear_temp_store(
 @callback(
     [
         Output("selected-observations", "data"),
-        Output("plot", "figure"),
-        Output("interactive-table", "selected_rows"),
+        Output("plot", "figure", allow_duplicate=True),
+        Output("interactive-table", "selected_rows", allow_duplicate=True),
     ],
     [
         Input("plot", "selectedData"),
-        Input("interactive-table", "selected-rows"),
+        Input("interactive-table", "selected_rows"),
     ],
     [
         State("plot", "figure"),
@@ -285,6 +282,8 @@ def sync_selected_data(
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
+    selected = []
+
     if trigger_id == "plot":
         if plot_selected:
             selected = [p["pointIndex"] for p in plot_selected["points"]]
@@ -297,15 +296,18 @@ def sync_selected_data(
         if table_selected:
             selected = table_selected
         else:
-            print(f"Error getting selected points from table: {
-                  table_selected}")
+            print(f"Error getting selected points from table: {table_selected}")
     else:
         print(f"Error syncing selection: trigger_id is {trigger_id}")
+        raise PreventUpdate
+
+    if fig:
+        fig.update_traces(
+            selectedpoints=selected if len(selected) > 0 else None,
+        )
 
     return (
         selected,
-        fig.update_traces(
-            selectedpoints=selected if len(selected) > 0 else None,
-        ),
+        fig,
         selected,
-    )    # TODO: finish this callback and clean up other callbacks
+    )  # TODO: finish this callback and clean up other callbacks

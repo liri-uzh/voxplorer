@@ -171,13 +171,11 @@ def build_interactive_table(data_table, meta_columns):
 # --- Callback 2: select all (filtered) data ---
 @callback(
     [
-        Output("interactive-table", "selected_rows"),
+        Output("interactive-table", "selected_rows", allow_duplicate=True),
     ],
     [
         Input("select-all-btn", "n_clicks"),
         Input("deselect-all-btn", "n_clicks"),
-        # Input("plot", "selectedData"),
-        Input("selected-observations", "data"),
     ],
     [
         State("interactive-table", "data"),
@@ -189,7 +187,6 @@ def build_interactive_table(data_table, meta_columns):
 def select_deselect_all(
     select_n_clicks,
     deselect_nclicks,
-    selected_data,
     original_rows,
     filtered_rows,
     cur_selected_rows,
@@ -203,13 +200,7 @@ def select_deselect_all(
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     print("from select_deselect_all - trigger:", trigger_id)
 
-    if trigger_id == "selected-observations":
-        if selected_data is not None:
-            if cur_selected_rows and set(selected_data) == set(cur_selected_rows):
-                raise PreventUpdate
-            else:
-                return (selected_data,)
-    elif trigger_id == "select-all-btn":
+    if trigger_id == "select-all-btn":
         to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
         return (to_select,)
     elif trigger_id == "deselect-all-btn":
@@ -263,7 +254,7 @@ def download_all(n_clicks, data_table):
     ],
     [
         State("stored-table", "data"),
-        State("se#lected-observations", "data"),
+        State("selected-observations", "data"),
     ],
     prevent_initial_call=True,
 )

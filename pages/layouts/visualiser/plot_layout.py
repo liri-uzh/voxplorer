@@ -313,6 +313,7 @@ layout = html.Div(
 
 
 # --- Callback 1: dimension reduction ---
+# TODO: add visual loading while computing
 @callback(
     [
         Output("stored-reduced-data", "data"),
@@ -531,7 +532,7 @@ def create_style_dropdowns(
 # --- Callback 3: Plot data ---
 @callback(
     [
-        Output("plot", "figure"),
+        Output("plot", "figure", allow_duplicate=True),
         Output("plot-output", "children"),
     ],
     [
@@ -540,14 +541,13 @@ def create_style_dropdowns(
         Input("shape-by-dropdown", "value"),
         Input("cmap-dropdown", "value"),
         Input("theme-dropdown", "value"),
-        Input("selected-observations", "data"),
     ],
     [
+        State("selected-observations", "data"),
         State("stored-reduced-data", "data"),
         State("stored-metainformation", "data"),
         State("num-dimensions", "value"),
         State("dim-reduction-algorithm", "value"),
-        State("plot", "selectedData"),
     ],
     prevent_initial_call=True,
 )
@@ -562,7 +562,6 @@ def plot_update(
     metavars,
     n_components,
     algorithm,
-    plot_selected_data,
 ):
     ctx = dash.callback_context
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -637,29 +636,11 @@ def plot_update(
     # Update customdata
     # FIXME: bug--> when color or symbol pointIndex does not match anymore
     # TODO: possible solution using go.Scatter and customdata?
-    if trigger_id == "selected-observations":
-        if selected_data is not None:
-            if plot_selected_data:
-                plot_selected_rows = [
-                    p["pointIndex"] for p in plot_selected_data["points"]
-                ]
-                if set(selected_data) == set(plot_selected_rows):
-                    print("selected_data == plot_selected_data")
-                    print(selected_data)
-                    print(plot_selected_rows)
-                    raise PreventUpdate
-                else:
-                    print("from plot callback - selected data:", selected_data)
-                    fig.update_traces(
-                        selectedpoints=selected_data
-                        if len(selected_data) > 0
-                        else None,
-                    )
-            else:
-                print("from plot callback - selected data:", selected_data)
-                fig.update_traces(
-                    selectedpoints=selected_data if len(selected_data) > 0 else None,
-                )
+    if selected_data is not None:
+        fig.update_traces(
+            selectedpoints=selected_data if len(selected_data) > 0 else None,
+        )
+
     # Set default dragmode
     fig.update_layout(
         dragmode="select",

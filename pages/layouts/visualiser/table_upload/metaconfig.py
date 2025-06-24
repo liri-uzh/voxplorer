@@ -75,37 +75,3 @@ def display_columns_checklist(data_table):
             checklist,
         ],
     )
-
-
-# --- Callback 2: store selected metavariables ---
-@callback(
-    [
-        Output("stored-metainformation-table", "data"),
-        Output("meta-selection-output", "children"),
-    ],
-    [
-        Input("confirmed-selection-btn", "n_clicks"),
-    ],
-    [
-        State("meta-columns-checklist", "value"),
-    ],
-    prevent_initial_call=True,
-)
-def store_metavariables(
-    n_clicks,
-    meta_columns,
-):
-    if n_clicks > 0:
-        return (
-            meta_columns,
-            [
-                dbc.Alert(
-                    "Selection confirmed",
-                    "success",
-                    dismissable=True,
-                )
-            ],
-        )
-
-    else:
-        raise PreventUpdate
