@@ -573,27 +573,13 @@ def plot_update(
             df = df.cast({symbol: pl.String})
 
         if n_components == 2:
-            # fig = scatter_2d(
-            #     df=df,
-            #     x="DIM1",
-            #     y="DIM2",
-            #     hover_data=[col for col in metavars if col in df.columns]
-            #     if metavars
-            #     else None,
-            #     color=color if color else None,
-            #     symbol=symbol if symbol else None,
-            #     color_discrete_sequence=color_opts[color_map],
-            #     template=template,
-            #     title=title,
-            #     height=None,
-            #     width=1080,
-            # )
             fig = scatter_2d(
                 data=df,
                 x="DIM1",
                 y="DIM2",
                 color=color,
                 symbol=symbol,
+                hover_data=metavars if metavars else None,
                 color_discrete_sequence=color_opts[color_map],
                 template=template,
                 title=title,

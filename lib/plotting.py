@@ -1,8 +1,10 @@
 """Plotting module for dash app."""
 
-import polars as pl
+from typing import Sequence, Union
+
+import numpy as np
 import plotly.graph_objects as go
-from typing import Union, Sequence
+import polars as pl
 
 
 def scatter_2d(
@@ -62,23 +64,23 @@ def scatter_2d(
 
         if symbol and symbol in subdf.columns:
             j = list(unique_symbols).index(
-                grp if not isinstance(grp, tuple) else grp[0]
+                grp if not isinstance(grp, tuple) else grp[1]
             )
-            mk["symbol"] = symbols[j % len(palette)]
+            mk["symbol"] = symbols[j % len(symbols)]
 
         # Hover template
+        idx = np.asarray(subdf.index).reshape(-1, 1)
         if hover_data:
-            cd = subdf[hover_data].values
-            print(f"customdata: {cd[:5]}")
+            cd = subdf[hover_data].to_numpy()
+            cd = np.hstack([idx, cd])
             hint = (
                 "<br>".join(
-                    [f"{c}: %{{customdata[{k}]}}" for k, c in enumerate(hover_data)]
+                    [f"{c}: %{{customdata[{k + 1}]}}" for k, c in enumerate(hover_data)]
                 )
                 + "<extra></extra>"
             )
-            print(f"hint: {hint}")
         else:
-            cd = None
+            cd = idx
             hint = None
 
         fig.add_trace(
@@ -90,7 +92,7 @@ def scatter_2d(
                 marker=mk,
                 customdata=cd,
                 hovertemplate=hint,
-                selected=dict(marker=dict(opacity=1)),
+                selected=dict(marker=dict(opacity=0.8)),
                 unselected=dict(marker=dict(opacity=0.2)),
             )
         )
