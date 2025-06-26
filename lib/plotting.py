@@ -17,6 +17,7 @@ def scatter_2d(
     symbol: str = None,
     color_discrete_sequence: Sequence[str] = None,
     hover_data: Sequence[str] = None,
+    selected: Sequence[int] = None,
     title: str = None,
     template: str = None,
 ) -> go.Figure:

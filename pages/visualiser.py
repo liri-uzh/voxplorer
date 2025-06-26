@@ -247,70 +247,83 @@ def promote_and_clear_temp_store(
 
 
 # --- Callback 3: sync selected data ---
-# FIXME: this ain't working
-# @callback(
-#     [
-#         Output("selected-observations", "data"),
-#         Output("plot", "figure", allow_duplicate=True),
-#         Output("interactive-table", "selected_rows", allow_duplicate=True),
-#     ],
-#     [
-#         Input("plot", "selectedData"),
-#         Input("interactive-table", "selected_rows"),
-#     ],
-#     [
-#         State("plot", "figure"),
-#         State("stored-table", "data"),
-#     ],
-#     prevent_initial_call=True,
-# )
-# def sync_selected_data(
-#     plot_selected,
-#     table_selected,
-#     fig,
-#     data_table,
-# ):
-#     ctx = dash.callback_context
-#
-#     if not ctx.triggered:
-#         raise PreventUpdate
-#
-#     if data_table is None:
-#         raise PreventUpdate
-#
-#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#
-#     selected = None
-#
-#     if trigger_id == "plot":
-#         if plot_selected:
-#             selected = [p["pointIndex"] for p in plot_selected["points"]]
-#         # TODO: add option for click-data / check how it works...
-#         else:
-#             print(f"Error getting selected points from plot: {plot_selected}")
-#             raise PreventUpdate
-#
-#     elif trigger_id == "interactive-table":
-#         if table_selected:
-#             selected = table_selected
-#         else:
-#             print(f"Error getting selected points from table: {table_selected}")
-#     else:
-#         print(f"Error syncing selection: trigger_id is {trigger_id}")
-#         raise PreventUpdate
-#
-#     if fig and selected:
-#         try:
-#             # fig.update_traces(
-#             #     selectedpoints=selected if len(selected) > 0 else None,
-#             # )
-#             for trace in fig["data"]:
-#                 trace["selectedpoints"] = selected or None
-#         except Exception as e:
-#             print(f"Error when updating fig: {e}")
-#
-#     return (
-#         selected,
-#         fig,
-#         selected,
-#     )  # TODO: finish this callback and clean up other callbacks
+# FIXME: I am broken!
+@callback(
+    [
+        Output("selected-observations", "data"),
+        Output("plot", "figure", allow_duplicate=True),
+        Output("interactive-table", "selected_rows", allow_duplicate=True),
+    ],
+    [
+        Input("plot", "selectedData"),
+        Input("interactive-table", "selected_rows"),
+    ],
+    [
+        State("plot", "figure"),
+        State("stored-table", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def sync_selected_data(
+    plot_selected,
+    table_selected,
+    fig_dict,
+    data_table,
+):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    if data_table is None:
+        raise PreventUpdate
+
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    print(f"triggered by: {trigger_id}")
+
+    selected = []
+
+    if trigger_id == "plot":
+        if not plot_selected or "points" not in plot_selected:
+            raise PreventUpdate
+        # Loop over selected points
+        try:
+            for pt in plot_selected["points"]:
+                selected.append(pt["customdata"][0])
+        except Exception as e:
+            print(
+                f"Error getting selected points from plot: {e}"
+                + f"\nplot_selected={plot_selected}"
+            )
+            raise e
+
+    elif trigger_id == "interactive-table":
+        try:
+            selected = table_selected or []
+        except Exception as e:
+            print(
+                f"Error getting selected points from table: {e}"
+                + f"\ntable_selected={table_selected}"
+            )
+    else:
+        print(f"Error syncing selection: trigger_id is {trigger_id}")
+        raise PreventUpdate
+
+    print(f"fig_dict? {bool(fig_dict)}")
+    fig = go.Figure(fig_dict) if fig_dict else None
+    print(f"fig: {fig}")
+    if fig:
+        try:
+            for trace in fig.data:
+                cd = list(trace.customdata or [])
+                sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected]
+                trace.selectedpoints = sel_pts or None
+        except Exception as e:
+            print(f"Error when updating fig: {e}")
+        fig.update_layout(dragmode="select")
+
+    return (
+        selected,
+        fig,
+        selected,
+    )  # TODO: finish this callback and clean up other callbacks

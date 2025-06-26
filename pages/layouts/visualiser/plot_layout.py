@@ -517,6 +517,7 @@ def create_style_dropdowns(
     )
 
 
+# TODO: add exception when number of vars is <=3 --> plot anyways and use the correct column names?
 # --- Callback 3: Plot data ---
 @callback(
     [
@@ -535,6 +536,7 @@ def create_style_dropdowns(
         State("stored-metainformation", "data"),
         State("num-dimensions", "value"),
         State("dim-reduction-algorithm", "value"),
+        State("selected-observations", "data"),
     ],
     prevent_initial_call=True,
 )
@@ -548,18 +550,20 @@ def plot_update(
     metavars,
     n_components,
     algorithm,
+    selected_obs,
 ):
     ctx = dash.callback_context
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("from plot callback - trigger:", trigger_id)
-    print(f"color: {color}")
-    print(f"symbol: {symbol}")
-    print(f"color_map: {color_map}")
-    print(f"template: {template}")
-    # FIXME: choosing these sometimes works sometimes not
-
-    if (not n_clicks) or (reduced_data is None):
+    if not ctx.triggered:
         raise PreventUpdate
+
+    if reduced_data is None:
+        return (
+            None,
+            dbc.Alert(
+                "Data must be first reduced before plotting!",
+                color="danger",
+            ),
+        )
 
     # Create figure
     try:
@@ -581,6 +585,7 @@ def plot_update(
                 symbol=symbol,
                 hover_data=metavars if metavars else None,
                 color_discrete_sequence=color_opts[color_map],
+                selected=selected_obs or None,
                 template=template,
                 title=title,
             )
