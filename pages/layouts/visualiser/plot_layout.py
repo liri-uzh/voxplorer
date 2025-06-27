@@ -585,7 +585,6 @@ def plot_update(
                 symbol=symbol,
                 hover_data=metavars if metavars else None,
                 color_discrete_sequence=color_opts[color_map],
-                selected=selected_obs or None,
                 template=template,
                 title=title,
             )
@@ -625,14 +624,15 @@ def plot_update(
             ),
         )
 
-    # # Update customdata
-    # # FIXME: bug--> when color or symbol pointIndex does not match anymore
-    # # TODO: possible solution using go.Scatter and customdata?
-    # print(f"selected_data: {selected_data}")
-    # if selected_data is not None:
-    #     fig.update_traces(
-    #         selectedpoints=selected_data if len(selected_data) > 0 else None,
-    #     )
+    # Selections
+    if selected_obs:
+        try:
+            for trace in fig.data:
+                cd = list(trace.customdata or [])
+                sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected_obs]
+                trace.selectedpoints = sel_pts or None
+        except Exception as e:
+            print(f"Error creting figure with selections: {e}")
 
     # Set default dragmode
     fig.update_layout(

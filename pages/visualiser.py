@@ -310,13 +310,15 @@ def sync_selected_data(
         raise PreventUpdate
 
     print(f"fig_dict? {bool(fig_dict)}")
-    fig = go.Figure(fig_dict) if fig_dict else None
+    fig = go.Figure(fig_dict) if fig_dict else {}
     print(f"fig: {fig}")
     if fig:
         try:
             for trace in fig.data:
                 cd = list(trace.customdata or [])
+                print(f"cd: {cd}")
                 sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected]
+                print(f"sel_pts: {sel_pts}")
                 trace.selectedpoints = sel_pts or None
         except Exception as e:
             print(f"Error when updating fig: {e}")
@@ -324,6 +326,6 @@ def sync_selected_data(
 
     return (
         selected,
-        fig,
+        {},
         selected,
     )  # TODO: finish this callback and clean up other callbacks
