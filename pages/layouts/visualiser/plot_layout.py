@@ -624,15 +624,15 @@ def plot_update(
             ),
         )
 
-    # Selections
-    if selected_obs:
-        try:
-            for trace in fig.data:
-                cd = list(trace.customdata or [])
-                sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected_obs]
-                trace.selectedpoints = sel_pts or None
-        except Exception as e:
-            print(f"Error creting figure with selections: {e}")
+    # # Selections
+    # if selected_obs:
+    #     try:
+    #         for trace in fig.data:
+    #             cd = list(trace.customdata or [])
+    #             sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected_obs]
+    #             trace.selectedpoints = sel_pts or None
+    #     except Exception as e:
+    #         print(f"Error creting figure with selections: {e}")
 
     # Set default dragmode
     fig.update_layout(

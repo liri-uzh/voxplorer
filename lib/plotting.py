@@ -4,6 +4,7 @@ from typing import Sequence, Union
 
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 import polars as pl
 
 
@@ -15,7 +16,7 @@ def scatter_2d(
     height: int = 1080,
     color: str = None,
     symbol: str = None,
-    color_discrete_sequence: Sequence[str] = None,
+    color_discrete_sequence: Sequence[str] = px.colors.qualitative.Plotly,
     hover_data: Sequence[str] = None,
     title: str = None,
     template: str = None,
@@ -42,7 +43,7 @@ def scatter_2d(
         grouped = [(None, df)]
 
     # Prep maps
-    palette = color_discrete_sequence or ["#636efa", "#EF553B", "#00cc96", "#ab63fa"]
+    palette = color_discrete_sequence
     symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x"]
     unique_colors = df[color].dropna().unique() if color else []
     unique_symbols = df[symbol].dropna().unique() if symbol else []
