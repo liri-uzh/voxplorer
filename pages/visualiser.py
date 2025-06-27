@@ -278,6 +278,9 @@ def sync_selected_data(
     if data_table is None:
         raise PreventUpdate
 
+    if fig_dict is None:
+        raise PreventUpdate
+
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     print(f"triggered by: {trigger_id}")
 
