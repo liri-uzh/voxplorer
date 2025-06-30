@@ -6,6 +6,7 @@ import dash
 from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
+import pandas as pd
 from plotly import graph_objects as go
 
 # local imports
@@ -253,6 +254,7 @@ def promote_and_clear_temp_store(
         Output("selected-observations", "data"),
         Output("plot", "figure", allow_duplicate=True),
         Output("interactive-table", "selected_rows", allow_duplicate=True),
+        # Output("plot", "selectedData", allow_duplicate=True),
     ],
     [
         Input("plot", "selectedData"),
@@ -277,6 +279,8 @@ def sync_selected_data(
 
     if data_table is None:
         raise PreventUpdate
+    else:
+        data_table = pd.DataFrame(data_table)
 
     if fig_dict is None:
         raise PreventUpdate
@@ -312,24 +316,31 @@ def sync_selected_data(
         print(f"Error syncing selection: trigger_id is {trigger_id}")
         raise PreventUpdate
 
-    print(f"fig_dict? {bool(fig_dict)}")
     fig = go.Figure(fig_dict) if fig_dict else {}
-    print(f"fig: {type(fig)}")
-    if fig:
+    if fig and trigger_id == "interactive-table":
         try:
             for trace in fig.data:
                 cd = list(trace.customdata or [])
-                print(f"cd: {cd}")
-                sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected]
-                print(f"sel_pts: {sel_pts}")
-                trace.selectedpoints = sel_pts or None
+                if len(selected) > 0:
+                    sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected]
+                else:
+                    sel_pts = [
+                        i
+                        for i, cd_pt in enumerate(cd)
+                        if cd_pt[0] in data_table.index.to_list()
+                    ]
+
+                trace.selectedpoints = sel_pts or []
         except Exception as e:
             print(f"Error when updating fig: {e}")
-        # TODO: correct figure -> regenerate?
+
         fig.update_layout(dragmode="select")
+
+        fig.layout.shapes = []
 
     return (
         selected,
         fig,
         selected,
+        # [],
     )  # TODO: finish this callback and clean up other callbacks
