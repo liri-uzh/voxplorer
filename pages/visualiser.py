@@ -325,6 +325,7 @@ def sync_selected_data(
                 trace.selectedpoints = sel_pts or None
         except Exception as e:
             print(f"Error when updating fig: {e}")
+        # TODO: correct figure -> regenerate?
         fig.update_layout(dragmode="select")
 
     return (
