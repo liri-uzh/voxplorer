@@ -314,7 +314,7 @@ def sync_selected_data(
 
     print(f"fig_dict? {bool(fig_dict)}")
     fig = go.Figure(fig_dict) if fig_dict else {}
-    print(f"fig: {fig}")
+    print(f"fig: {type(fig)}")
     if fig:
         try:
             for trace in fig.data:
@@ -329,6 +329,6 @@ def sync_selected_data(
 
     return (
         selected,
-        {},
+        fig,
         selected,
     )  # TODO: finish this callback and clean up other callbacks
