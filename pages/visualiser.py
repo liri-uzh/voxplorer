@@ -316,6 +316,7 @@ def sync_selected_data(
         print(f"Error syncing selection: trigger_id is {trigger_id}")
         raise PreventUpdate
 
+    # FIXME: redraw figure --> modify plotting function and add states for styling...
     fig = go.Figure(fig_dict) if fig_dict else {}
     if fig and trigger_id == "interactive-table":
         try:
