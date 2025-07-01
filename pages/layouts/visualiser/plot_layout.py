@@ -583,6 +583,7 @@ def plot_update(
                 y="DIM2",
                 color=color,
                 symbol=symbol,
+                selections=selected_obs,
                 hover_data=metavars if metavars else None,
                 color_discrete_sequence=color_opts[color_map],
                 template=template,
@@ -623,16 +624,6 @@ def plot_update(
                 dismissable=True,
             ),
         )
-
-    # Selections
-    if selected_obs:
-        try:
-            for trace in fig.data:
-                cd = list(trace.customdata or [])
-                sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected_obs]
-                trace.selectedpoints = sel_pts or None
-        except Exception as e:
-            print(f"Error creting figure with selections: {e}")
 
     # Set default dragmode
     fig.update_layout(

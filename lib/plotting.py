@@ -16,6 +16,7 @@ def scatter_2d(
     height: int = 1080,
     color: str = None,
     symbol: str = None,
+    selections: Sequence[int] = None,
     color_discrete_sequence: Sequence[str] = px.colors.qualitative.Plotly,
     hover_data: Sequence[str] = None,
     title: str = None,
@@ -97,6 +98,11 @@ def scatter_2d(
                 unselected=dict(marker=dict(opacity=0.2)),
             )
         )
+        if selections:
+            trace = fig.data[-1]
+            cd = list(trace.customdata)
+            sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selections]
+            trace.selectedpoints = sel_pts
 
     # Final touches
     fig.update_layout(

@@ -7,7 +7,6 @@ from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import pandas as pd
-from plotly import graph_objects as go
 
 # local imports
 from pages.layouts.visualiser.table_upload import table_upload
@@ -17,6 +16,7 @@ from pages.layouts.visualiser import (
     dimensionality_reduction_opts,
     plot_layout,
 )
+from lib.plotting import scatter_2d
 
 
 # init
@@ -261,16 +261,23 @@ def promote_and_clear_temp_store(
         Input("interactive-table", "selected_rows"),
     ],
     [
-        State("plot", "figure"),
         State("stored-table", "data"),
+        State("stored-reduced-data", "data"),
+        State("stored-metainformation", "data"),
+        State("num-dimensions", "value"),
+        State("dim-reduction-algorithm", "value"),
+        State("color-by-dropdown", "value"),
+        State("shape-by-dropdown", "value"),
+        State("cmap-dropdown", "value"),
+        State("theme-dropdown", "value"),
     ],
     prevent_initial_call=True,
 )
 def sync_selected_data(
     plot_selected,
     table_selected,
-    fig_dict,
     data_table,
+    # TODO: continue here
 ):
     ctx = dash.callback_context
 
@@ -317,7 +324,7 @@ def sync_selected_data(
         raise PreventUpdate
 
     # FIXME: redraw figure --> modify plotting function and add states for styling...
-    fig = go.Figure(fig_dict) if fig_dict else {}
+    fig = scatter_2d()
     if fig and trigger_id == "interactive-table":
         try:
             for trace in fig.data:
