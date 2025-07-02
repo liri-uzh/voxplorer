@@ -6,7 +6,7 @@ import dash
 from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-import pandas as pd
+import plotly.graph_objects as go
 
 # local imports
 from pages.layouts.visualiser.table_upload import table_upload
@@ -254,14 +254,13 @@ def promote_and_clear_temp_store(
         Output("selected-observations", "data"),
         Output("plot", "figure", allow_duplicate=True),
         Output("interactive-table", "selected_rows", allow_duplicate=True),
-        # Output("plot", "selectedData", allow_duplicate=True),
     ],
     [
         Input("plot", "selectedData"),
         Input("interactive-table", "selected_rows"),
     ],
     [
-        State("stored-table", "data"),
+        State("plot", "figure"),
         State("stored-reduced-data", "data"),
         State("stored-metainformation", "data"),
         State("num-dimensions", "value"),
@@ -276,20 +275,22 @@ def promote_and_clear_temp_store(
 def sync_selected_data(
     plot_selected,
     table_selected,
-    data_table,
-    # TODO: continue here
+    fig_dict,
+    reduced_data,
+    metavars,
+    n_components,
+    algorithm,
+    color,
+    symbol,
+    color_map,
+    template,
 ):
     ctx = dash.callback_context
 
     if not ctx.triggered:
         raise PreventUpdate
 
-    if data_table is None:
-        raise PreventUpdate
-    else:
-        data_table = pd.DataFrame(data_table)
-
-    if fig_dict is None:
+    if reduced_data is None:
         raise PreventUpdate
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -310,45 +311,44 @@ def sync_selected_data(
                 + f"\nplot_selected={plot_selected}"
             )
             raise e
+        if fig_dict:
+            fig = go.Figure(fig_dict)
+        else:
+            fig = None
 
     elif trigger_id == "interactive-table":
         try:
-            selected = table_selected or []
+            selected = table_selected or None
         except Exception as e:
             print(
                 f"Error getting selected points from table: {e}"
                 + f"\ntable_selected={table_selected}"
             )
+        try:
+            title = f"{algorithm.upper()} {n_components}D embedding"
+            fig = scatter_2d(
+                data=reduced_data,
+                x="DIM1",
+                y="DIM2",
+                color=color,
+                symbol=symbol,
+                selections=selected,
+                hover_data=metavars if metavars else None,
+                color_discrete_sequence=plot_layout.color_opts[color_map],
+                template=template,
+                title=title,
+            )
+        except Exception as e:
+            print(f"Error updating plot selections from table: {e}")
     else:
         print(f"Error syncing selection: trigger_id is {trigger_id}")
         raise PreventUpdate
 
-    # FIXME: redraw figure --> modify plotting function and add states for styling...
-    fig = scatter_2d()
-    if fig and trigger_id == "interactive-table":
-        try:
-            for trace in fig.data:
-                cd = list(trace.customdata or [])
-                if len(selected) > 0:
-                    sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selected]
-                else:
-                    sel_pts = [
-                        i
-                        for i, cd_pt in enumerate(cd)
-                        if cd_pt[0] in data_table.index.to_list()
-                    ]
-
-                trace.selectedpoints = sel_pts or []
-        except Exception as e:
-            print(f"Error when updating fig: {e}")
-
+    if fig:
         fig.update_layout(dragmode="select")
-
-        fig.layout.shapes = []
 
     return (
         selected,
         fig,
         selected,
-        # [],
-    )  # TODO: finish this callback and clean up other callbacks
+    )
