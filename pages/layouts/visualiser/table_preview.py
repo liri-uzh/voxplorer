@@ -180,7 +180,6 @@ def build_interactive_table(data_table, meta_columns):
     [
         State("interactive-table", "data"),
         State("interactive-table", "derived_virtual_data"),
-        State("interactive-table", "selected_rows"),
     ],
     prevent_initial_call=True,
 )
@@ -189,7 +188,6 @@ def select_deselect_all(
     deselect_nclicks,
     original_rows,
     filtered_rows,
-    cur_selected_rows,
 ):
     ctx = dash.callback_context
     if not ctx.triggered:

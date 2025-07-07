@@ -318,7 +318,9 @@ def sync_selected_data(
 
     elif trigger_id == "interactive-table":
         try:
+            print(f"triggered by interactive-table; selected: {table_selected}")
             selected = table_selected or None
+            print(f"selected: {selected}")
         except Exception as e:
             print(
                 f"Error getting selected points from table: {e}"

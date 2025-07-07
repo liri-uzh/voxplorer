@@ -129,6 +129,7 @@ def _make_styling_dropdowns(
     )
 
 
+# TODO: add buttons to sync selections between table and plot
 # --- Layout: plot ---
 layout = html.Div(
     [
