@@ -168,43 +168,43 @@ def build_interactive_table(data_table, meta_columns):
         )
 
 
-# --- Callback 2: select all (filtered) data ---
-@callback(
-    [
-        Output("interactive-table", "selected_rows", allow_duplicate=True),
-    ],
-    [
-        Input("select-all-btn", "n_clicks"),
-        Input("deselect-all-btn", "n_clicks"),
-    ],
-    [
-        State("interactive-table", "data"),
-        State("interactive-table", "derived_virtual_data"),
-    ],
-    prevent_initial_call=True,
-)
-def select_deselect_all(
-    select_n_clicks,
-    deselect_nclicks,
-    original_rows,
-    filtered_rows,
-):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-
-    # solution from: https://github.com/plotly/dash-table/issues/249#issuecomment-693131768
-    # get trigger ID
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("from select_deselect_all - trigger:", trigger_id)
-
-    if trigger_id == "select-all-btn":
-        to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
-        return (to_select,)
-    elif trigger_id == "deselect-all-btn":
-        return ([],)
-    else:
-        raise PreventUpdate
+# # --- Callback 2: select all (filtered) data ---
+# @callback(
+#     [
+#         Output("interactive-table", "selected_rows", allow_duplicate=True),
+#     ],
+#     [
+#         Input("select-all-btn", "n_clicks"),
+#         Input("deselect-all-btn", "n_clicks"),
+#     ],
+#     [
+#         State("interactive-table", "data"),
+#         State("interactive-table", "derived_virtual_data"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# def select_deselect_all(
+#     select_n_clicks,
+#     deselect_nclicks,
+#     original_rows,
+#     filtered_rows,
+# ):
+#     ctx = dash.callback_context
+#     if not ctx.triggered:
+#         raise PreventUpdate
+#
+#     # solution from: https://github.com/plotly/dash-table/issues/249#issuecomment-693131768
+#     # get trigger ID
+#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#     print("from select_deselect_all - trigger:", trigger_id)
+#
+#     if trigger_id == "select-all-btn":
+#         to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
+#         return (to_select,)
+#     elif trigger_id == "deselect-all-btn":
+#         return ([],)
+#     else:
+#         raise PreventUpdate
 
 
 # --- Callback 3a: downlaod all data ---

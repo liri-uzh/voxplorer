@@ -253,9 +253,11 @@ def promote_and_clear_temp_store(
     [
         Output("selected-observations", "data"),
         Output("plot", "figure", allow_duplicate=True),
-        Output("interactive-table", "selected_rows", allow_duplicate=True),
+        Output("interactive-table", "selected_rows"),
     ],
     [
+        Input("select-all-btn", "n_clicks"),
+        Input("deselect-all-btn", "n_clicks"),
         Input("plot", "selectedData"),
         Input("interactive-table", "selected_rows"),
     ],
@@ -263,6 +265,8 @@ def promote_and_clear_temp_store(
         State("plot", "figure"),
         State("stored-reduced-data", "data"),
         State("stored-metainformation", "data"),
+        State("interactive-table", "data"),
+        State("interactive-table", "derived_virtual_data"),
         State("num-dimensions", "value"),
         State("dim-reduction-algorithm", "value"),
         State("color-by-dropdown", "value"),
@@ -273,11 +277,15 @@ def promote_and_clear_temp_store(
     prevent_initial_call=True,
 )
 def sync_selected_data(
+    select_all_n_clicks,
+    deselect_all_n_clicks,
     plot_selected,
     table_selected,
     fig_dict,
     reduced_data,
     metavars,
+    original_rows,
+    filtered_rows,
     n_components,
     algorithm,
     color,
@@ -316,16 +324,25 @@ def sync_selected_data(
         else:
             fig = None
 
-    elif trigger_id == "interactive-table":
-        try:
-            print(f"triggered by interactive-table; selected: {table_selected}")
-            selected = table_selected or None
-            print(f"selected: {selected}")
-        except Exception as e:
-            print(
-                f"Error getting selected points from table: {e}"
-                + f"\ntable_selected={table_selected}"
-            )
+    elif trigger_id in {
+        "interactive-table",
+        "select-all-btn",
+        "deselect-all-btn",
+    }:
+        if trigger_id == "select-all-btn":
+            selected = [
+                i for i, row in enumerate(original_rows) if row in filtered_rows
+            ]
+        elif trigger_id == "deselect-all-btn":
+            selected = []
+        else:
+            try:
+                selected = table_selected or []
+            except Exception as e:
+                print(
+                    f"Error getting selected points from table: {e}"
+                    + f"\ntable_selected={table_selected}"
+                )
         try:
             title = f"{algorithm.upper()} {n_components}D embedding"
             fig = scatter_2d(
