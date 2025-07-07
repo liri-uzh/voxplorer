@@ -198,57 +198,8 @@ def promote_and_clear_temp_store(
     )
 
 
-# # --- Callback 3: Synchronise table and plot selections ---
-# @callback(
-#     [
-#         Output("selected-observations", "data"),
-#     ],
-#     [
-#         Input("interactive-table", "selected_rows"),
-#         Input("plot", "selectedData"),
-#     ],
-#     [
-#         State("selected-observations", "data"),
-#     ],
-#     prevent_initial_call=True,
-# )
-# def sync_table_and_plot(
-#     table_selected_rows,
-#     plot_selected_data,
-#     selected_data,
-# ):
-#     print("\n")
-#     print("-----")
-#     ctx = dash.callback_context
-#     if not ctx.triggered:
-#         raise PreventUpdate
-#
-#     # Get ID of trigger
-#     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#     print("Triggered by:", trigger_id)
-#
-#     # Get current table data and selected rows
-#     if trigger_id == "interactive-table":
-#         if selected_data and set(selected_data) == set(table_selected_rows):
-#             raise PreventUpdate
-#         else:
-#             print("new table selections:", table_selected_rows)
-#             return (table_selected_rows,)
-#     elif trigger_id == "plot":
-#         if plot_selected_data:
-#             print(plot_selected_data)
-#             plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
-#             if selected_data and set(selected_data) == set(plot_selected_rows):
-#                 raise PreventUpdate
-#             else:
-#                 print("new plot selections:", plot_selected_rows)
-#                 return (plot_selected_rows,)
-#         else:
-#             return ([],)
-
-
 # --- Callback 3: sync selected data ---
-# FIXME: I am broken!
+# TODO: add 3d plotting
 @callback(
     [
         Output("selected-observations", "data"),

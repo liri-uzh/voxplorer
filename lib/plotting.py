@@ -5,11 +5,12 @@ from typing import Sequence, Union
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import pandas as pd
 import polars as pl
 
 
 def scatter_2d(
-    data: Union[dict, pl.DataFrame],
+    data: Union[dict, pl.DataFrame, pd.DataFrame],
     x: str,
     y: str,
     width: int = 1080,
@@ -24,10 +25,14 @@ def scatter_2d(
 ) -> go.Figure:
     if isinstance(data, pl.DataFrame):
         df = data.to_pandas()
-    else:
-        import pandas as pd
-
+    elif isinstance(data, dict):
         df = pd.DataFrame(data)
+    elif isinstance(data, pd.DataFrame):
+        df = data.copy()
+    else:
+        raise ValueError(
+            "Invalid data parsed. Must be dict, polars.DataFrame, or pandas.DataFrame."
+        )
 
     # Get grouping keys
     group_cols = []
@@ -89,6 +94,119 @@ def scatter_2d(
             go.Scatter(
                 x=subdf[x],
                 y=subdf[y],
+                mode="markers",
+                name=name,
+                marker=mk,
+                customdata=cd,
+                hovertemplate=hint,
+                selected=dict(marker=dict(opacity=0.8)),
+                unselected=dict(marker=dict(opacity=0.2)),
+            )
+        )
+        if selections:
+            trace = fig.data[-1]
+            cd = list(trace.customdata)
+            sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selections]
+            trace.selectedpoints = sel_pts
+
+    # Final touches
+    fig.update_layout(
+        title=title,
+        template=template,
+        width=width,
+        height=height,
+    )
+
+    return fig
+
+
+def scatter_3d(
+    data: Union[dict, pd.DataFrame, pl.DataFrame],
+    x: str,
+    y: str,
+    z: str,
+    width: int = 1080,
+    height: int = 1080,
+    color: str = None,
+    symbol: str = None,
+    selections: Sequence[int] = None,
+    color_discrete_sequence: Sequence[str] = px.colors.qualitative.Plotly,
+    hover_data: Sequence[str] = None,
+    title: str = None,
+    template: str = None,
+) -> go.Figure:
+    if isinstance(data, pl.DataFrame):
+        df = data.to_pandas()
+    elif isinstance(data, dict):
+        df = pd.DataFrame(data)
+    elif isinstance(data, pd.DataFrame):
+        df = data.copy()
+    else:
+        raise ValueError(
+            "Invalid data parsed. Must be dict, polars.DataFrame, or pandas.DataFrame."
+        )
+
+    # Get grouping keys
+    group_cols = []
+    if color:
+        group_cols.append(color)
+    if symbol:
+        group_cols.append(symbol)
+
+    # Build figure
+    fig = go.Figure()
+    if group_cols:
+        grouped = df.groupby(group_cols, dropna=False)
+    else:
+        grouped = [(None, df)]
+
+    # Prep maps
+    palette = color_discrete_sequence
+    symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x"]
+    unique_colors = df[color].dropna().unique() if color else []
+    unique_symbols = df[symbol].dropna().unique() if symbol else []
+
+    # Trace
+    for grp, subdf in grouped:
+        if grp is None:
+            name = ""
+        elif isinstance(grp, tuple):
+            name = " | ".join(str(g) for g in grp)
+        else:
+            name = str(grp)
+
+        # Markers
+        mk = dict(size=8, opacity=0.8)
+        if color and color in subdf.columns:
+            i = list(unique_colors).index(grp if not isinstance(grp, tuple) else grp[0])
+            mk["color"] = palette[i % len(palette)]
+
+        if symbol and symbol in subdf.columns:
+            j = list(unique_symbols).index(
+                grp if not isinstance(grp, tuple) else grp[1]
+            )
+            mk["symbol"] = symbols[j % len(symbols)]
+
+        # Hover template
+        idx = np.asarray(subdf.index).reshape(-1, 1)
+        if hover_data:
+            cd = subdf[hover_data].to_numpy()
+            cd = np.hstack([idx, cd])
+            hint = (
+                "<br>".join(
+                    [f"{c}: %{{customdata[{k + 1}]}}" for k, c in enumerate(hover_data)]
+                )
+                + "<extra></extra>"
+            )
+        else:
+            cd = idx
+            hint = None
+
+        fig.add_trace(
+            go.Scatter3d(
+                x=subdf[x],
+                y=subdf[y],
+                z=subdf[z],
                 mode="markers",
                 name=name,
                 marker=mk,

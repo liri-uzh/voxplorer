@@ -15,7 +15,7 @@ import plotly.express as px
 import polars as pl
 
 # local imports
-from lib.plotting import scatter_2d  # TODO: scatter_3d
+from lib.plotting import scatter_2d, scatter_3d
 from lib.dimensionality_reduction import (
     pca_reduction,
     mds_reduction,
@@ -129,7 +129,6 @@ def _make_styling_dropdowns(
     )
 
 
-# TODO: add buttons to sync selections between table and plot
 # --- Layout: plot ---
 layout = html.Div(
     [
@@ -590,6 +589,14 @@ def plot_update(
                 template=template,
                 title=title,
             )
+        # elif n_components == 3:
+        #     fig = scatter_3d(
+        #         data=df,
+        #         x="DIM1",
+        #         y="DIM2",
+        #         z="DIM3",
+        #
+        #     )
         # elif n_components == 3:
         #     fig = scatter_3d(
         #         df=df,
