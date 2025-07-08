@@ -294,6 +294,7 @@ def sync_selected_data(
                     f"Error getting selected points from table: {e}"
                     + f"\ntable_selected={table_selected}"
                 )
+        print(f"Reduced data: {reduced_data}")
         try:
             title = f"{algorithm.upper()} {n_components}D embedding"
             fig = scatter_2d(

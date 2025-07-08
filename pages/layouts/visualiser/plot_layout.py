@@ -314,6 +314,7 @@ layout = html.Div(
 
 # --- Callback 1: dimension reduction ---
 # TODO: add visual loading while computing
+#  TODO: simplify downloads; downloads two files!
 @callback(
     [
         Output("stored-reduced-data", "data"),

@@ -204,7 +204,7 @@ def create_algorithm_params_form(algorithm):
                                         step=specs["custom-options"]["step"],
                                         value=specs["custom-options"]["default"],
                                         required=True,
-                                        # style={"display": "none"},    # would need callback to show up when custom selected
+                                        # style={"display": "none"},    # TODO: would need callback to show up when custom selected
                                     ),
                                     dbc.FormText("Custom option"),
                                 ]
@@ -415,10 +415,11 @@ layout = dbc.Row(
     [
         Input("stored-table", "data"),
         Input("confirmed-selection-btn", "n_clicks"),
+        Input("extract-features-btn", "n_clicks"),
     ],
 )
-def display_dimreduction_opts(data_table, n_clicks):
-    if data_table is None or n_clicks < 1:
+def display_dimreduction_opts(data_table, n_clicks_table, n_clicks_features):
+    if data_table is None or (n_clicks_table < 1 and n_clicks_features < 1):
         return ({"display": "none"},)
 
     return ({"display": "block"},)

@@ -10,7 +10,7 @@ import polars as pl
 
 
 def scatter_2d(
-    data: Union[dict, pl.DataFrame, pd.DataFrame],
+    data: Union[list, pl.DataFrame, pd.DataFrame],
     x: str,
     y: str,
     width: int = 1080,
@@ -25,7 +25,7 @@ def scatter_2d(
 ) -> go.Figure:
     if isinstance(data, pl.DataFrame):
         df = data.to_pandas()
-    elif isinstance(data, dict):
+    elif isinstance(data, list):
         df = pd.DataFrame(data)
     elif isinstance(data, pd.DataFrame):
         df = data.copy()
@@ -121,7 +121,7 @@ def scatter_2d(
 
 
 def scatter_3d(
-    data: Union[dict, pd.DataFrame, pl.DataFrame],
+    data: Union[list, pd.DataFrame, pl.DataFrame],
     x: str,
     y: str,
     z: str,
@@ -137,7 +137,7 @@ def scatter_3d(
 ) -> go.Figure:
     if isinstance(data, pl.DataFrame):
         df = data.to_pandas()
-    elif isinstance(data, dict):
+    elif isinstance(data, list):
         df = pd.DataFrame(data)
     elif isinstance(data, pd.DataFrame):
         df = data.copy()
