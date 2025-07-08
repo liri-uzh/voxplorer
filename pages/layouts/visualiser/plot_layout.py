@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import polars as pl
-from sklearn.preprocessing import scale
 
 # local imports
 from lib.plotting import scatter_2d, scatter_3d
@@ -175,8 +174,8 @@ layout = html.Div(
                     dcc.Graph(
                         id="plot",
                         style={
-                            "width": "90vh",
-                            "height": "90vh",
+                            "width": "110vh",
+                            "height": "110vh",
                         },
                         config={
                             "displayModeBar": True,
@@ -314,6 +313,8 @@ layout = html.Div(
 
 
 # --- Callback 1: dimension reduction ---
+# TODO: add visual loading while computing
+#  TODO: simplify downloads; downloads two files!
 @callback(
     [
         Output("stored-reduced-data", "data"),
@@ -331,7 +332,7 @@ layout = html.Div(
         State("num-dimensions", "value"),
         State({"type": "dim-red-param", "id": ALL}, "value"),
     ],
-    suppress_initial_call=True,
+    prevent_initial_call=True,
 )
 def run_dim_reduction(
     n_clicks,
@@ -378,17 +379,18 @@ def run_dim_reduction(
 
             # Always increse i (if custom we want to skip next)
             i += 1
+
     except Exception as e:
         return (
             None,
             dbc.Alert(
                 f"Error while parsing algorithm parameters: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
         )
-
     try:
         # Prepare data for dimensionality reduction
         X = _prep_data_dim_red(data=data_table, metavars=metavars)
@@ -427,6 +429,7 @@ def run_dim_reduction(
             dbc.Alert(
                 f"Error during dimensionality reduction: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -441,6 +444,7 @@ def run_dim_reduction(
             dbc.Alert(
                 f"Error combining metavars to reduced features: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -453,6 +457,7 @@ def run_dim_reduction(
             + f"{X.shape[1]} to {n_components} dimensions"
             + f" using {algorithm.upper()}",
             color="success",
+            dismissable=True,
         ),
         {"display": "block"},
         {"display": "block"},
@@ -513,10 +518,11 @@ def create_style_dropdowns(
     )
 
 
+# TODO: add exception when number of vars is <=3 --> plot anyways and use the correct column names?
 # --- Callback 3: Plot data ---
 @callback(
     [
-        Output("plot", "figure"),
+        Output("plot", "figure", allow_duplicate=True),
         Output("plot-output", "children"),
     ],
     [
@@ -525,15 +531,15 @@ def create_style_dropdowns(
         Input("shape-by-dropdown", "value"),
         Input("cmap-dropdown", "value"),
         Input("theme-dropdown", "value"),
-        Input("selected-observations", "data"),
     ],
     [
         State("stored-reduced-data", "data"),
         State("stored-metainformation", "data"),
         State("num-dimensions", "value"),
         State("dim-reduction-algorithm", "value"),
-        State("plot", "selectedData"),
+        State("selected-observations", "data"),
     ],
+    prevent_initial_call=True,
 )
 def plot_update(
     n_clicks,
@@ -541,19 +547,24 @@ def plot_update(
     symbol,
     color_map,
     template,
-    selected_data,
     reduced_data,
     metavars,
     n_components,
     algorithm,
-    plot_selected_data,
+    selected_obs,
 ):
     ctx = dash.callback_context
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("from plot callback - trigger:", trigger_id)
-
-    if (not n_clicks) or (reduced_data is None):
+    if not ctx.triggered:
         raise PreventUpdate
+
+    if reduced_data is None:
+        return (
+            None,
+            dbc.Alert(
+                "Data must be first reduced before plotting!",
+                color="danger",
+            ),
+        )
 
     # Create figure
     try:
@@ -568,37 +579,42 @@ def plot_update(
 
         if n_components == 2:
             fig = scatter_2d(
-                df=df,
+                data=df,
                 x="DIM1",
                 y="DIM2",
-                hover_data=[col for col in metavars if col in df.columns]
-                if metavars
-                else None,
-                color=color if color else None,
-                symbol=symbol if symbol else None,
+                color=color,
+                symbol=symbol,
+                selections=selected_obs,
+                hover_data=metavars if metavars else None,
                 color_discrete_sequence=color_opts[color_map],
                 template=template,
                 title=title,
-                height=None,
-                width=1080,
             )
-        elif n_components == 3:
-            fig = scatter_3d(
-                df=df,
-                x="DIM1",
-                y="DIM2",
-                z="DIM3",
-                hover_data=[col for col in metavars if col in df.columns]
-                if metavars
-                else None,
-                color=color if color else None,
-                symbol=symbol if symbol else None,
-                color_discrete_sequence=color_opts[color_map],
-                template=template,
-                title=title,
-                height=None,
-                width=1080,
-            )
+        # elif n_components == 3:
+        #     fig = scatter_3d(
+        #         data=df,
+        #         x="DIM1",
+        #         y="DIM2",
+        #         z="DIM3",
+        #
+        #     )
+        # elif n_components == 3:
+        #     fig = scatter_3d(
+        #         df=df,
+        #         x="DIM1",
+        #         y="DIM2",
+        #         z="DIM3",
+        #         hover_data=[col for col in metavars if col in df.columns]
+        #         if metavars
+        #         else None,
+        #         color=color if color else None,
+        #         symbol=symbol if symbol else None,
+        #         color_discrete_sequence=color_opts[color_map],
+        #         template=template,
+        #         title=title,
+        #         height=None,
+        #         width=1080,
+        #     )
         else:
             return (
                 None,
@@ -614,40 +630,14 @@ def plot_update(
             dbc.Alert(
                 f"Error creating figure: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
-    # Update customdata
-    # FIXME: bug--> when color or symbol pointIndex does not match anymore
-    # TODO: possible solution using go.Scatter and customdata?
-    if trigger_id == "selected-observations":
-        if selected_data is not None:
-            if plot_selected_data:
-                plot_selected_rows = [
-                    p["pointIndex"] for p in plot_selected_data["points"]
-                ]
-                if set(selected_data) == set(plot_selected_rows):
-                    print("selected_data == plot_selected_data")
-                    print(selected_data)
-                    print(plot_selected_rows)
-                    raise PreventUpdate
-                else:
-                    print("from plot callback - selected data:", selected_data)
-                    fig.update_traces(
-                        selectedpoints=selected_data
-                        if len(selected_data) > 0
-                        else None,
-                    )
-            else:
-                print("from plot callback - selected data:", selected_data)
-                fig.update_traces(
-                    selectedpoints=selected_data if len(selected_data) > 0 else None,
-                )
     # Set default dragmode
     fig.update_layout(
         dragmode="select",
     )
-    print("ready to return")
     return (
         fig,
         None,
@@ -678,6 +668,7 @@ def download_all_redueced(n_clicks, data_table):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
@@ -712,6 +703,7 @@ def download_selected_reduced(n_clicks, data_table, selectedobservations):
                 dbc.Alert(
                     "No observations selected",
                     color="warning",
+                    dismissable=True,
                 ),
             )
         else:
@@ -725,6 +717,7 @@ def download_selected_reduced(n_clicks, data_table, selectedobservations):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 

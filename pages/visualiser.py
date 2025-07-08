@@ -6,17 +6,17 @@ import dash
 from dash import dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
-
+import plotly.graph_objects as go
 
 # local imports
-from lib.data_loader import parse_contents
+from pages.layouts.visualiser.table_upload import table_upload
+from pages.layouts.visualiser.audio_upload import audio_upload
 from pages.layouts.visualiser import (
-    meta_config_card,
-    feature_extraction_opts,
     table_preview,
     dimensionality_reduction_opts,
     plot_layout,
 )
+from lib.plotting import scatter_2d
 
 
 # init
@@ -27,15 +27,19 @@ dash.register_page(__name__, path="/visualiser")
 layout_storage = html.Div(
     [
         # data storage for session
-        dcc.Store(id="stored-table", storage_type="session"),
+        dcc.Store(id="stored-table", storage_type="memory"),
         # table-spec storage for session
-        dcc.Store(id="stored-metainformation", storage_type="session"),
-        # feature extraction options
-        dcc.Store(id="stored-feature-extraction-opts", storage_type="session"),
+        dcc.Store(id="stored-metainformation", storage_type="memory"),
         # reduced dimensions table
-        dcc.Store(id="stored-reduced-data", storage_type="session"),
+        dcc.Store(id="stored-reduced-data", storage_type="memory"),
         # selected observations
-        dcc.Store(id="selected-observations", storage_type="session"),
+        dcc.Store(id="selected-observations", storage_type="memory"),
+        # Temporary tables based on upload
+        # table storage
+        dcc.Store(id="stored-data-table", storage_type="memory"),
+        # audio storage
+        dcc.Store(id="stored-data-audio", storage_type="memory"),
+        dcc.Store(id="stored-metainformation-audio", storage_type="memory"),
     ]
 )
 
@@ -44,7 +48,7 @@ layout_storage = html.Div(
 upload_sel_layout = dbc.Row(
     dbc.Card(
         [
-            dbc.CardHeader(html.H4("Upload pre-computed table or feature extraction?")),
+            dbc.CardHeader(html.H4("Upload a table or upload audio files")),
             dbc.CardBody(
                 dbc.Row(
                     [
@@ -74,104 +78,16 @@ upload_sel_layout = dbc.Row(
 )
 
 
-# --- Layout upload table ---
-layout_upload_table = dbc.Row(
-    [
-        dbc.Card(
-            [
-                dbc.CardHeader(html.H4("Upload a table (.csv, .tsv, .xlxs)")),
-                dbc.CardBody(
-                    [
-                        dcc.Upload(
-                            id="upload-table",
-                            children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A("Select a file"),
-                                ]
-                            ),
-                            style={
-                                "width": "100%",
-                                "height": "60px",
-                                "lineHeight": "60px",
-                                "borderWidth": "1px",
-                                "borderStyle": "dashed",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
-                            },
-                            multiple=False,
-                        ),
-                        html.Div(id="table-output", className="mt-3"),
-                    ]
-                ),
-            ]
-        ),
-    ]
-)
-
-
-# --- Layout upload audio ---
-layout_upload_audio = dbc.Row(
-    [
-        dbc.Card(
-            [
-                dbc.CardHeader(html.H4("Upload audio files (.wav)")),
-                dbc.CardBody(
-                    [
-                        dcc.Upload(
-                            id="upload-audio",
-                            children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A("Select audio files"),
-                                ]
-                            ),
-                            style={
-                                "width": "100%",
-                                "height": "60px",
-                                "lineHeight": "60px",
-                                "borderWidth": "1px",
-                                "borderStyle": "dashed",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
-                            },
-                            multiple=True,
-                        ),
-                        html.Div(id="audio-output", className="mt-3"),
-                    ]
-                ),
-            ]
-        ),
-    ]
-)
-
-
-# --- Layout table ---
-layout_table = [
-    layout_upload_table,
-    meta_config_card.layout,
-    table_preview.layout,
-    dimensionality_reduction_opts.layout,
-    plot_layout.layout,
-]
-
-
-# --- Layout audio ---
-layout_audio = [
-    layout_upload_audio,
-    feature_extraction_opts.layout,
-    table_preview.layout,
-    dimensionality_reduction_opts.layout,
-    plot_layout.layout,
-]
-
-
 # --- Main layout ---
 layout = dbc.Container(
     [
         layout_storage,
         upload_sel_layout,
-        html.Div(id="data-mode-div"),
+        audio_upload.layout,
+        table_upload.layout,
+        dimensionality_reduction_opts.layout,
+        table_preview.layout,
+        plot_layout.layout,
     ],
     fluid=True,
 )
@@ -180,12 +96,18 @@ layout = dbc.Container(
 # --- Callback 1: choice of data mode ---
 @callback(
     [
-        Output("data-mode-div", "children"),
+        Output("upload-table-layout", "style"),
+        Output("upload-audio-layout", "style"),
+        Output("upload-table-component", "children", allow_duplicate=True),
+        Output("upload-audio-component", "children", allow_duplicate=True),
+        Output("stored-table", "clear_data"),
+        Output("stored-metainformation", "clear_data"),
     ],
     [
         Input("upload-table-btn", "n_clicks"),
         Input("upload-audio-btn", "n_clicks"),
     ],
+    prevent_initial_call=True,
 )
 def upload_choice(n_clicks_table, n_clicks_audio):
     ctx = dash.callback_context
@@ -196,115 +118,208 @@ def upload_choice(n_clicks_table, n_clicks_audio):
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger_id == "upload-table-btn":
-        return (layout_table,)
+        return (
+            {"display": "block"},
+            {"display": "none"},
+            table_upload.upload_table_component(),
+            audio_upload.upload_audio_component(),
+            True,
+            True,
+        )
     elif trigger_id == "upload-audio-btn":
-        return (layout_audio,)
+        return (
+            {"display": "none"},
+            {"display": "block"},
+            table_upload.upload_table_component(),
+            audio_upload.upload_audio_component(),
+            True,
+            True,
+        )
     else:
         raise PreventUpdate
 
 
-# --- Callback 2a: table upload ---
+# --- Callback 2: update store components when data is uploaded ---
 @callback(
     [
-        Output("table-output", "children"),
         Output("stored-table", "data"),
-        Output("meta-config-card", "style"),
+        Output("stored-metainformation", "data"),
+        Output("stored-data-table", "clear_data"),
+        Output("stored-data-audio", "clear_data"),
+        Output("stored-metainformation-audio", "clear_data"),
     ],
     [
-        Input("upload-table", "contents"),
+        Input("confirmed-selection-btn", "n_clicks"),
+        Input("stored-data-audio", "data"),
     ],
     [
-        State("upload-table", "filename"),
+        State("stored-data-table", "data"),
+        State("meta-columns-checklist", "value"),
+        State("stored-metainformation-audio", "data"),
     ],
+    prevent_initial_call=True,
 )
-def upload_table(contents, filename):
-    if contents is not None and filename is not None:
-        # parse uploaded contents
-        data_table, alert_msg = parse_contents(contents, filename, "table")
-
-        # manage returns
-        if data_table is not None:
-            return (
-                dbc.Alert(f"{filename} uploaded successfully.", color="success"),
-                data_table,
-                {"display": "block"},
-            )
-        else:
-            return (
-                alert_msg,
-                None,
-                {"display": "none"},
-            )
-    return (
-        dbc.Alert("No table uploaded yet.", color="info"),
-        None,
-        {"display": "none"},
-    )
-
-
-# --- Callback 2b: display options ---
-@callback(
-    [
-        Output("audio-output", "children"),
-        Output("feature-extraction-opts-card", "style"),
-    ],
-    [
-        Input("upload-audio", "filename"),
-    ],
-)
-def display_feature_extraction_opts(filenames):
-    if not filenames:
-        raise PreventUpdate
-
-    return (
-        dbc.Alert(f"{len(filenames)} files uploaded", color="success"),
-        {"display": "block"},
-    )
-
-
-# --- Callback 3: Synchronise table and plot selections ---
-@callback(
-    [
-        Output("selected-observations", "data"),
-    ],
-    [
-        Input("interactive-table", "selected_rows"),
-        Input("plot", "selectedData"),
-    ],
-    [
-        State("selected-observations", "data"),
-    ],
-)
-def sync_table_and_plot(
-    table_selected_rows,
-    plot_selected_data,
-    selected_data,
+def promote_and_clear_temp_store(
+    n_clicks_table,
+    data_audio,
+    data_table,
+    metainformation_table,
+    metainformation_audio,
 ):
-    print("\n")
-    print("-----")
     ctx = dash.callback_context
     if not ctx.triggered:
         raise PreventUpdate
 
-    # Get ID of trigger
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("Triggered by:", trigger_id)
 
-    # Get current table data and selected rows
-    if trigger_id == "interactive-table":
-        if selected_data and set(selected_data) == set(table_selected_rows):
+    if trigger_id == "confirmed-selection-btn":
+        if data_table is None and metainformation_table is None:
             raise PreventUpdate
+
+        new_table = data_table or dash.no_update
+        new_meta = metainformation_table or dash.no_update
+
+    elif trigger_id == "stored-data-audio":
+        if data_audio is None and metainformation_audio is None:
+            raise PreventUpdate
+
+        new_table = data_audio or dash.no_update
+        new_meta = metainformation_audio or dash.no_update
+
+    else:
+        print("Problem storing data: triggered by none")
+        raise PreventUpdate
+    return (
+        new_table,
+        new_meta,
+        True,
+        True,
+        True,
+    )
+
+
+# --- Callback 3: sync selected data ---
+# TODO: add 3d plotting
+@callback(
+    [
+        Output("selected-observations", "data"),
+        Output("plot", "figure", allow_duplicate=True),
+        Output("interactive-table", "selected_rows"),
+    ],
+    [
+        Input("select-all-btn", "n_clicks"),
+        Input("deselect-all-btn", "n_clicks"),
+        Input("plot", "selectedData"),
+        Input("interactive-table", "selected_rows"),
+    ],
+    [
+        State("plot", "figure"),
+        State("stored-reduced-data", "data"),
+        State("stored-metainformation", "data"),
+        State("interactive-table", "data"),
+        State("interactive-table", "derived_virtual_data"),
+        State("num-dimensions", "value"),
+        State("dim-reduction-algorithm", "value"),
+        State("color-by-dropdown", "value"),
+        State("shape-by-dropdown", "value"),
+        State("cmap-dropdown", "value"),
+        State("theme-dropdown", "value"),
+    ],
+    prevent_initial_call=True,
+)
+def sync_selected_data(
+    select_all_n_clicks,
+    deselect_all_n_clicks,
+    plot_selected,
+    table_selected,
+    fig_dict,
+    reduced_data,
+    metavars,
+    original_rows,
+    filtered_rows,
+    n_components,
+    algorithm,
+    color,
+    symbol,
+    color_map,
+    template,
+):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    if reduced_data is None:
+        raise PreventUpdate
+
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    print(f"triggered by: {trigger_id}")
+
+    selected = []
+
+    if trigger_id == "plot":
+        if not plot_selected or "points" not in plot_selected:
+            raise PreventUpdate
+        # Loop over selected points
+        try:
+            for pt in plot_selected["points"]:
+                selected.append(pt["customdata"][0])
+        except Exception as e:
+            print(
+                f"Error getting selected points from plot: {e}"
+                + f"\nplot_selected={plot_selected}"
+            )
+            raise e
+        if fig_dict:
+            fig = go.Figure(fig_dict)
         else:
-            print("new table selections:", table_selected_rows)
-            return (table_selected_rows,)
-    elif trigger_id == "plot":
-        if plot_selected_data:
-            print(plot_selected_data)
-            plot_selected_rows = [p["pointIndex"] for p in plot_selected_data["points"]]
-            if selected_data and set(selected_data) == set(plot_selected_rows):
-                raise PreventUpdate
-            else:
-                print("new plot selections:", plot_selected_rows)
-                return (plot_selected_rows,)
+            fig = None
+
+    elif trigger_id in {
+        "interactive-table",
+        "select-all-btn",
+        "deselect-all-btn",
+    }:
+        if trigger_id == "select-all-btn":
+            selected = [
+                i for i, row in enumerate(original_rows) if row in filtered_rows
+            ]
+        elif trigger_id == "deselect-all-btn":
+            selected = []
         else:
-            return ([],)
+            try:
+                selected = table_selected or []
+            except Exception as e:
+                print(
+                    f"Error getting selected points from table: {e}"
+                    + f"\ntable_selected={table_selected}"
+                )
+        print(f"Reduced data: {reduced_data}")
+        try:
+            title = f"{algorithm.upper()} {n_components}D embedding"
+            fig = scatter_2d(
+                data=reduced_data,
+                x="DIM1",
+                y="DIM2",
+                color=color,
+                symbol=symbol,
+                selections=selected,
+                hover_data=metavars if metavars else None,
+                color_discrete_sequence=plot_layout.color_opts[color_map],
+                template=template,
+                title=title,
+            )
+        except Exception as e:
+            print(f"Error updating plot selections from table: {e}")
+    else:
+        print(f"Error syncing selection: trigger_id is {trigger_id}")
+        raise PreventUpdate
+
+    if fig:
+        fig.update_layout(dragmode="select")
+
+    return (
+        selected,
+        fig,
+        selected,
+    )

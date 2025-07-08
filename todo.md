@@ -1,6 +1,7 @@
 # TODO document for LiRI-DORA.
 - [x] pages basic layout
 - [ ] README
+- [ ] clean tests and dirs from deprecated modules
 
 
 ## Visualiser
@@ -11,7 +12,7 @@
 ### Layouts
     - [ ] Options card:
         - if audio upload:
-            -> feature extraction options
+            -> ~feature extraction options~
             -> select meta-information
         x if table upload:
             x -> select meta-information

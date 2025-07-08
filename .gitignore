@@ -7,4 +7,6 @@ __pycache__
 .pretrained_spkrec_models/
 tmp.py
 tmp.txt
-bak
+
+# Backups
+*bak*

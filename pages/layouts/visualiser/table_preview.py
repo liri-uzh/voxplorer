@@ -64,7 +64,10 @@ layout = html.Div(
         ),
         dbc.Row(
             dbc.Col(
-                html.Div(id="interactive-data-container"),
+                html.Div(
+                    id="interactive-data-container",
+                    children=[dash_table.DataTable(id="interactive-table")],
+                ),
                 width=12,
             )
         ),
@@ -84,12 +87,17 @@ layout = html.Div(
     [
         Input("stored-table", "data"),
         Input("stored-metainformation", "data"),
-        Input("confirmed-selection-btn", "n_clicks"),
     ],
 )
-def build_interactive_table(data_table, meta_columns, n_clicks):
-    if data_table is None or meta_columns is None or n_clicks < 1:
-        raise PreventUpdate
+def build_interactive_table(data_table, meta_columns):
+    if data_table is None and meta_columns is None:
+        return (
+            [],
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "none"},
+            {"display": "none"},
+        )
 
     # parse meta columns
     meta_columns = meta_columns if meta_columns is not None else []
@@ -138,7 +146,7 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
 
         return (
             dbc.Card(
-                dbc.CardBody(html.Div(interactive_table, style={"width": "100%"})),
+                dbc.CardBody(interactive_table),
                 className="mt-4",
             ),
             {"display": "block"},
@@ -151,6 +159,7 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
             dbc.Alert(
                 f"Error creating interactive table: {e}",
                 color="danger",
+                dismissable=True,
             ),
             {"display": "none"},
             {"display": "none"},
@@ -159,57 +168,7 @@ def build_interactive_table(data_table, meta_columns, n_clicks):
         )
 
 
-# --- Callback 2: select all (filtered) data ---
-@callback(
-    [
-        Output("interactive-table", "selected_rows"),
-    ],
-    [
-        Input("select-all-btn", "n_clicks"),
-        Input("deselect-all-btn", "n_clicks"),
-        # Input("plot", "selectedData"),
-        Input("selected-observations", "data"),
-    ],
-    [
-        State("interactive-table", "data"),
-        State("interactive-table", "derived_virtual_data"),
-        State("interactive-table", "selected_rows"),
-    ],
-    suppress_initial_call=True,
-)
-def select_deselect_all(
-    select_n_clicks,
-    deselect_nclicks,
-    selected_data,
-    original_rows,
-    filtered_rows,
-    cur_selected_rows,
-):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-
-    # solution from: https://github.com/plotly/dash-table/issues/249#issuecomment-693131768
-    # get trigger ID
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    print("from select_deselect_all - trigger:", trigger_id)
-
-    if trigger_id == "selected-observations":
-        if selected_data is not None:
-            if cur_selected_rows and set(selected_data) == set(cur_selected_rows):
-                raise PreventUpdate
-            else:
-                return (selected_data,)
-    elif trigger_id == "select-all-btn":
-        to_select = [i for i, row in enumerate(original_rows) if row in filtered_rows]
-        return (to_select,)
-    elif trigger_id == "deselect-all-btn":
-        return ([],)
-    else:
-        raise PreventUpdate
-
-
-# --- Callback 3a: downlaod all data ---
+# --- Callback 2a: downlaod all data ---
 @callback(
     [
         Output("download-all-csv", "data"),
@@ -233,6 +192,7 @@ def download_all(n_clicks, data_table):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
@@ -242,7 +202,7 @@ def download_all(n_clicks, data_table):
     )
 
 
-# --- Callback 3b: download selected data ---
+# --- Callback 2b: download selected data ---
 @callback(
     [
         Output("download-selected-csv", "data"),
@@ -267,6 +227,7 @@ def download_selected(n_clicks, data_table, selectedobservations):
                 dbc.Alert(
                     "No observations selected",
                     color="warning",
+                    dismissable=True,
                 ),
             )
         else:
@@ -278,6 +239,7 @@ def download_selected(n_clicks, data_table, selectedobservations):
             dbc.Alert(
                 f"Error downloading data: {e}",
                 color="danger",
+                dismissable=True,
             ),
         )
 
