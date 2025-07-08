@@ -32,7 +32,7 @@ class FeatureExtractor:
     feature_methods: dict
         Dictionary containing feature methods. Keys are the method names,
         values are the arguments passed to the method. Accepted methods are
-        'mel_features', 'lpc_features', and 'speaker_embeddings'.
+        'mel_features' or 'speaker_embeddings'.
         Example:
             feature_methods = {
                 'mel_features': {'n_mfccs' : 13, 'n_mels': 40, 'win_length': 25.0,
@@ -366,7 +366,7 @@ class FeatureExtractor:
 
     # Add feature labels
     @staticmethod
-    def add_feature_labels(feature_methods: dict) -> list:
+    def add_feature_labels(feature_methods: dict, n_embeddings: int = None) -> list:
         """Adds labels to feature methods.
 
         Parameters
@@ -374,7 +374,10 @@ class FeatureExtractor:
         feature_methods: dict
             Dictionary containing feature methods. Keys are the method names,
             values are the arguments passed to the method. Accepted methods are
-            'mel_features', 'lpc_features', and 'speaker_embeddings'.
+            'mel_features' or 'speaker_embeddings'.
+        n_embeddings: int
+            Number of embeddings; Needed only if "speaker_embeddings" is in `feature_methods`.
+            Default is None.
 
         Returns
         -------
@@ -402,7 +405,7 @@ class FeatureExtractor:
                 else:
                     feature_labels.extend(tmp_feature_labels)
             elif method == "speaker_embeddings":
-                feature_labels.extend([f"X{i + 1}" for i in range(args["n_features"])])
+                feature_labels.extend([f"X{i + 1}" for i in range(n_embeddings)])
             else:
                 raise ValueError("Invalid feature method.")
 
@@ -451,9 +454,7 @@ class FeatureExtractor:
         """
         features = []
         metadata = defaultdict(list)
-        feature_labels = FeatureExtractor.add_feature_labels(
-            feature_methods=self.feature_methods
-        )
+        n_embeddings = None
 
         for fn, fb in zip(self.filenames, self.decoded_files):
             # Extract file metadata
@@ -488,6 +489,7 @@ class FeatureExtractor:
                     features_f.append(
                         FeatureExtractor.speaker_embeddings(audio=audio, **args)
                     )
+                    n_embeddings = features_f[-1].shape[-1]
 
             # Concatenate features of current file and append to features list
             features_f = np.concatenate(features_f, axis=0)
@@ -500,6 +502,12 @@ class FeatureExtractor:
             for key, value in metadata_f.items():
                 # make sure it matches the number of frames
                 metadata[key].extend(value * features_f.shape[0])
+
+        # Create feature labels
+        feature_labels = FeatureExtractor.add_feature_labels(
+            feature_methods=self.feature_methods,
+            n_embeddings=n_embeddings,
+        )
 
         # Concatenate features
         features = np.concatenate(features, axis=0)

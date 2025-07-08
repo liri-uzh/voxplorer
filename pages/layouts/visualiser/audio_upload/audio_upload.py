@@ -150,6 +150,9 @@ def extract_features(
         metavar_opts_values=metav_opts_vals,
         separator=separator,
     )
+    print(f"Algorithm: {feat_extr_algo}")
+    print(f"Parsed options: {parsed_features}")
+    print(f"Parsed meta: {parsed_metav}")
 
     # Extract features
     data_table, metacols, alert = parse_audio_contents(
