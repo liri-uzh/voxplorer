@@ -102,6 +102,8 @@ layout = dbc.Container(
         Output("upload-audio-component", "children", allow_duplicate=True),
         Output("stored-table", "clear_data"),
         Output("stored-metainformation", "clear_data"),
+        Output("stored-reduced-data", "clear_data"),
+        Output("selected-observations", "clear_data"),
     ],
     [
         Input("upload-table-btn", "n_clicks"),
@@ -125,6 +127,8 @@ def upload_choice(n_clicks_table, n_clicks_audio):
             audio_upload.upload_audio_component(),
             True,
             True,
+            True,
+            True,
         )
     elif trigger_id == "upload-audio-btn":
         return (
@@ -132,6 +136,8 @@ def upload_choice(n_clicks_table, n_clicks_audio):
             {"display": "block"},
             table_upload.upload_table_component(),
             audio_upload.upload_audio_component(),
+            True,
+            True,
             True,
             True,
         )
