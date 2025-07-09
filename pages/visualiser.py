@@ -104,6 +104,8 @@ layout = dbc.Container(
         Output("stored-metainformation", "clear_data"),
         Output("stored-reduced-data", "clear_data"),
         Output("selected-observations", "clear_data"),
+        Output("plot-layout", "style", allow_duplicate=True),
+        Output("dim-red-output", "children", allow_duplicate=True),
     ],
     [
         Input("upload-table-btn", "n_clicks"),
@@ -129,6 +131,8 @@ def upload_choice(n_clicks_table, n_clicks_audio):
             True,
             True,
             True,
+            {"display": "none"},
+            None,
         )
     elif trigger_id == "upload-audio-btn":
         return (
@@ -140,6 +144,8 @@ def upload_choice(n_clicks_table, n_clicks_audio):
             True,
             True,
             True,
+            {"display": "none"},
+            None,
         )
     else:
         raise PreventUpdate

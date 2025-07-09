@@ -318,7 +318,7 @@ layout = html.Div(
 @callback(
     [
         Output("stored-reduced-data", "data"),
-        Output("dim-red-output", "children"),
+        Output("dim-red-output", "children", allow_duplicate=True),
         Output("download-reduced-all-btn", "style"),
         Output("download-reduced-selected-btn", "style"),
     ],
