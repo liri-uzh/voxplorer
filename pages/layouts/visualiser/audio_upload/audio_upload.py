@@ -111,6 +111,7 @@ def _process_opts(
         Output("stored-metainformation-audio", "data"),
         Output("audio-output", "children", allow_duplicate=True),
         Output("upload-audio-component", "children", allow_duplicate=True),
+        Output("feature-extraction-opts-card", "style", allow_duplicate=True),
     ],
     [
         Input("extract-features-btn", "n_clicks"),
@@ -162,4 +163,4 @@ def extract_features(
         metavars=parsed_metav,
     )
 
-    return data_table, metacols, alert, upload_audio_component()
+    return data_table, metacols, alert, upload_audio_component(), {"display": "none"}

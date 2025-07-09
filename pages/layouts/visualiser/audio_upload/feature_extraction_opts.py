@@ -371,13 +371,14 @@ layout = dbc.Row(
 @callback(
     [
         Output("audio-output", "children"),
-        Output("feature-extraction-opts-card", "style"),
+        Output("feature-extraction-opts-card", "style", allow_duplicate=True),
         Output("example-file-label", "children"),
     ],
     [
         Input("upload-audio", "filename"),
         Input("stored-table", "data"),
     ],
+    prevent_initial_call=True,
 )
 def display_feature_extraction_opts(
     filenames,
