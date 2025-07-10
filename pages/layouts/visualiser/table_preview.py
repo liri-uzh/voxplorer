@@ -1,3 +1,4 @@
+import json
 import dash
 from dash import html, callback, Input, Output, State, dash_table, dcc
 from dash.exceptions import PreventUpdate
@@ -38,6 +39,7 @@ layout = html.Div(
                             ),
                             dcc.Download(id="download-all-csv"),
                             dcc.Download(id="download-reduced-all-csv"),
+                            dcc.Download(id="download-logs"),
                             html.Div(id="download-all-output"),
                         ],
                     ),
@@ -175,6 +177,7 @@ def build_interactive_table(data_table, meta_columns):
     [
         Output("download-all-csv", "data"),
         Output("download-reduced-all-csv", "data"),
+        Output("download-logs", "data", allow_duplicate=True),
         Output("download-all-output", "children"),
     ],
     [
@@ -183,10 +186,16 @@ def build_interactive_table(data_table, meta_columns):
     [
         State("stored-table", "data"),
         State("stored-reduced-data", "data"),
+        State("processing-logs", "data"),
     ],
     prevent_initial_call=True,
 )
-def download_all(n_clicks, data_table, reduced_data_table):
+def download_all(
+    n_clicks,
+    data_table,
+    reduced_data_table,
+    logs,
+):
     alert = None
     # Prep data
     to_download_full = None
@@ -220,9 +229,23 @@ def download_all(n_clicks, data_table, reduced_data_table):
     else:
         to_download_reduced = None
 
+    # Prep logs
+    if logs:
+        try:
+            json_logs = json.dumps(logs, indent=2)
+            to_download_logs = dict(
+                content=json_logs, filename="processing_settings_logs.json"
+            )
+        except Exception as e:
+            print(f"Error converting logs to json: {e}")
+            to_download_logs = None
+    else:
+        to_download_logs = None
+
     return (
         to_download_full,
         to_download_reduced,
+        to_download_logs,
         alert,
     )
 
@@ -232,6 +255,7 @@ def download_all(n_clicks, data_table, reduced_data_table):
     [
         Output("download-selected-csv", "data"),
         Output("download-reduced-selected-csv", "data"),
+        Output("download-logs", "data", allow_duplicate=True),
         Output("download-selected-output", "children"),
     ],
     [
@@ -240,11 +264,18 @@ def download_all(n_clicks, data_table, reduced_data_table):
     [
         State("stored-table", "data"),
         State("stored-reduced-data", "data"),
+        State("processing-logs", "data"),
         State("selected-observations", "data"),
     ],
     prevent_initial_call=True,
 )
-def download_selected(n_clicks, data_table, reduced_data_table, selectedobservations):
+def download_selected(
+    n_clicks,
+    data_table,
+    reduced_data_table,
+    logs,
+    selectedobservations,
+):
     alert = None
     # Prep data
     to_download_full = None
@@ -292,8 +323,22 @@ def download_selected(n_clicks, data_table, reduced_data_table, selectedobservat
     else:
         to_download_reduced = None
 
+    # Prep logs
+    if logs:
+        try:
+            json_logs = json.dumps(logs, indent=2)
+            to_download_logs = dict(
+                content=json_logs, filename="processing_settings_logs.json"
+            )
+        except Exception as e:
+            print(f"Error converting logs to json: {e}")
+            to_download_logs = None
+    else:
+        to_download_logs = None
+
     return (
         to_download_full,
         to_download_reduced,
+        to_download_logs,
         alert,
     )
