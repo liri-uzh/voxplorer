@@ -210,11 +210,57 @@ def promote_and_clear_temp_store(
     )
 
 
-# --- Callback 3: sync selected data ---
+# Callback 3: get selections if only table is present
+@callback(
+    [
+        Output("selected-observations", "data", allow_duplicate=True),
+        Output("interactive-table", "selected_rows", allow_duplicate=True),
+    ],
+    [
+        Input("select-all-btn", "n_clicks"),
+        Input("deselect-all-btn", "n_clicks"),
+        Input("interactive-table", "selected_rows"),
+    ],
+    [
+        State("stored-reduced-data", "data"),
+        State("interactive-table", "data"),
+        State("interactive-table", "derived_virtual_data"),
+    ],
+    prevent_initial_call=True,
+)
+def table_selected_data(
+    select_all_n_clicks,
+    deselect_all_n_clicks,
+    selected_rows,
+    reduced_data,
+    original_rows,
+    filtered_rows,
+):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        raise PreventUpdate
+
+    if reduced_data is not None:
+        raise PreventUpdate
+
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "select-all-btn":
+        selected = [i for i, row in enumerate(original_rows) if row in filtered_rows]
+    elif trigger_id == "deselect-all-btn":
+        selected = []
+    else:
+        selected = selected_rows or []
+
+    return selected, selected
+
+
+# --- Callback 4: sync selected data between plot and figure---
 # TODO: add 3d plotting
 @callback(
     [
-        Output("selected-observations", "data"),
+        Output("selected-observations", "data", allow_duplicate=True),
         Output("plot", "figure", allow_duplicate=True),
         Output("interactive-table", "selected_rows"),
     ],
@@ -306,7 +352,6 @@ def sync_selected_data(
                     f"Error getting selected points from table: {e}"
                     + f"\ntable_selected={table_selected}"
                 )
-        print(f"Reduced data: {reduced_data}")
         try:
             title = f"{algorithm.upper()} {n_components}D embedding"
             fig = scatter_2d(
