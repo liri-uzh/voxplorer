@@ -278,11 +278,11 @@ layout = html.Div(
 
 # --- Callback 1: dimension reduction ---
 # TODO: add visual loading while computing
-#  TODO: simplify downloads; downloads two files!
 @callback(
     [
         Output("stored-reduced-data", "data"),
         Output("dim-red-output", "children", allow_duplicate=True),
+        Output("processing-logs", "data", allow_duplicate=True),
     ],
     [
         Input("run-dim-red-btn", "n_clicks"),
@@ -290,6 +290,7 @@ layout = html.Div(
     [
         State("stored-table", "data"),
         State("stored-metainformation", "data"),
+        State("processing-logs", "data"),
         State("dim-reduction-algorithm", "value"),
         State("num-dimensions", "value"),
         State({"type": "dim-red-param", "id": ALL}, "value"),
@@ -300,6 +301,7 @@ def run_dim_reduction(
     n_clicks,
     data_table,
     metavars,
+    logs,
     algorithm,
     n_components,
     values,
@@ -350,6 +352,7 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
+            None,
         )
     try:
         # Prepare data for dimensionality reduction
@@ -391,6 +394,7 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
+            None,
         )
 
     try:
@@ -404,7 +408,19 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
+            None,
         )
+
+    # Write logs
+    if logs is not None:
+        if not isinstance(logs, dict):
+            logs_out = dict(logs)
+        else:
+            logs_out = logs
+    else:
+        logs_out = {}
+
+    logs_out["dimensionality_reduction"] = {algorithm: parsed_kwargs}
 
     return (
         new_data,
@@ -415,6 +431,7 @@ def run_dim_reduction(
             color="success",
             dismissable=True,
         ),
+        logs_out,
     )
 
 

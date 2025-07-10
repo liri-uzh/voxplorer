@@ -66,7 +66,7 @@ layout = dbc.Row(
 
 # helper for callback 1: process feature methods and metavars
 def _process_opts(
-    feeature_extraction_method: str,
+    feature_extraction_method: str,
     feature_opts: list,
     feature_opts_values: list,
     metavar_opts: list,
@@ -74,7 +74,7 @@ def _process_opts(
     separator: str,
 ):
     # NOTE: check lib.feature_extraction.FeatureExtractor for info on format
-    parsed_features_opts = {feeature_extraction_method: {}}
+    parsed_features_opts = {feature_extraction_method: {}}
     parsed_metavars_opts = {
         "variables": [None] * len(metavar_opts),
         "split_char": separator,
@@ -84,7 +84,7 @@ def _process_opts(
     i = 0
     while i < len(feature_opts):
         param_name = feature_opts[i]["id"]["id"]
-        parsed_features_opts[feeature_extraction_method][param_name] = (
+        parsed_features_opts[feature_extraction_method][param_name] = (
             feature_opts_values[i]
         )
         i += 1
@@ -112,6 +112,7 @@ def _process_opts(
         Output("audio-output", "children", allow_duplicate=True),
         Output("upload-audio-component", "children", allow_duplicate=True),
         Output("feature-extraction-opts-card", "style", allow_duplicate=True),
+        Output("processing-logs", "data", allow_duplicate=True),
     ],
     [
         Input("extract-features-btn", "n_clicks"),
@@ -119,6 +120,7 @@ def _process_opts(
     [
         State("upload-audio", "contents"),
         State("upload-audio", "filename"),
+        State("processing-logs", "data"),
         State("feature-extraction-algorithm", "value"),
         State({"type": "feat-extr-param", "id": ALL}, "value"),
         State("metavars-separator", "value"),
@@ -130,6 +132,7 @@ def extract_features(
     n_clicks,
     contents,
     filenames,
+    logs,
     feat_extr_algo,
     feat_extr_opts_vals,
     separator,
@@ -144,16 +147,13 @@ def extract_features(
 
     # Parse selected options
     parsed_features, parsed_metav = _process_opts(
-        feeature_extraction_method=feat_extr_algo,
+        feature_extraction_method=feat_extr_algo,
         feature_opts=feat_extr_states,
         feature_opts_values=feat_extr_opts_vals,
         metavar_opts=metav_states,
         metavar_opts_values=metav_opts_vals,
         separator=separator,
     )
-    print(f"Algorithm: {feat_extr_algo}")
-    print(f"Parsed options: {parsed_features}")
-    print(f"Parsed meta: {parsed_metav}")
 
     # Extract features
     data_table, metacols, alert = parse_audio_contents(
@@ -163,4 +163,20 @@ def extract_features(
         metavars=parsed_metav,
     )
 
-    return data_table, metacols, alert, upload_audio_component(), {"display": "none"}
+    # Write logs
+    if logs is not None:
+        if not isinstance(logs, dict):
+            logs_out = dict(logs)
+    else:
+        logs_out = {}
+
+    logs_out["feature_extraction"] = {feat_extr_algo: parsed_features[feat_extr_algo]}
+
+    return (
+        data_table,
+        metacols,
+        alert,
+        upload_audio_component(),
+        {"display": "none"},
+        logs_out,
+    )

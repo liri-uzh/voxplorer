@@ -34,6 +34,8 @@ layout_storage = html.Div(
         dcc.Store(id="stored-reduced-data", storage_type="memory"),
         # selected observations
         dcc.Store(id="selected-observations", storage_type="memory"),
+        # logs
+        dcc.Store(id="processing-logs", storage_type="memory"),
         # Temporary tables based on upload
         # table storage
         dcc.Store(id="stored-data-table", storage_type="memory"),
