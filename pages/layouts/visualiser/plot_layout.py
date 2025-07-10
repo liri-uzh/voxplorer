@@ -135,42 +135,6 @@ layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    html.Div(
-                        [
-                            dbc.Button(
-                                "Downlaod Reduced All",
-                                id="download-reduced-all-btn",
-                                style={"display": "none"},
-                            ),
-                            dcc.Download(id="download-reduced-all-csv"),
-                            html.Div(id="download-reduced-all-output"),
-                        ],
-                    ),
-                    width=2,
-                    className="justify-content-end",
-                    style={"margin-left": "auto"},
-                ),
-                dbc.Col(
-                    html.Div(
-                        [
-                            dbc.Button(
-                                "Downlaod Reduced Selected",
-                                id="download-reduced-selected-btn",
-                                style={"display": "none"},
-                            ),
-                            dcc.Download(id="download-reduced-selected-csv"),
-                            html.Div(id="download-reduced-selected-output"),
-                        ],
-                    ),
-                    width=2,
-                    className="justify-content-end",
-                    style={"margin-left": "auto"},
-                ),
-            ]
-        ),
-        dbc.Row(
-            [
-                dbc.Col(
                     dcc.Graph(
                         id="plot",
                         style={
@@ -319,8 +283,6 @@ layout = html.Div(
     [
         Output("stored-reduced-data", "data"),
         Output("dim-red-output", "children", allow_duplicate=True),
-        Output("download-reduced-all-btn", "style"),
-        Output("download-reduced-selected-btn", "style"),
     ],
     [
         Input("run-dim-red-btn", "n_clicks"),
@@ -388,8 +350,6 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
-            {"display": "none"},
-            {"display": "none"},
         )
     try:
         # Prepare data for dimensionality reduction
@@ -431,8 +391,6 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
-            {"display": "none"},
-            {"display": "none"},
         )
 
     try:
@@ -446,8 +404,6 @@ def run_dim_reduction(
                 color="danger",
                 dismissable=True,
             ),
-            {"display": "none"},
-            {"display": "none"},
         )
 
     return (
@@ -459,8 +415,6 @@ def run_dim_reduction(
             color="success",
             dismissable=True,
         ),
-        {"display": "block"},
-        {"display": "block"},
     )
 
 
@@ -640,88 +594,5 @@ def plot_update(
     )
     return (
         fig,
-        None,
-    )
-
-
-# --- Callback 4a: downlaod all data ---
-# @callback(
-#     [
-#         Output("download-reduced-all-csv", "data"),
-#         Output("download-reduced-all-output", "children"),
-#     ],
-#     [
-#         Input("download-reduced-all-btn", "n_clicks"),
-#     ],
-#     [
-#         State("stored-reduced-data", "data"),
-#     ],
-#     prevent_initial_call=True,
-# )
-# def download_all_redueced(n_clicks, data_table):
-#     try:
-#         df = pd.DataFrame(data_table)
-#         to_download = dcc.send_data_frame(df.to_csv, "reduced_data_table.csv")
-#     except Exception as e:
-#         return (
-#             None,
-#             dbc.Alert(
-#                 f"Error downloading data: {e}",
-#                 color="danger",
-#                 dismissable=True,
-#             ),
-#         )
-#
-#     return (
-#         to_download,
-#         None,
-#     )
-
-
-# --- Callback 4b: download selected data ---
-@callback(
-    [
-        Output("download-reduced-selected-csv", "data"),
-        Output("download-reduced-selected-output", "children"),
-    ],
-    [
-        Input("download-reduced-selected-btn", "n_clicks"),
-    ],
-    [
-        State("stored-reduced-data", "data"),
-        State("selected-observations", "data"),
-    ],
-    prevent_initial_call=True,
-)
-def download_selected_reduced(n_clicks, data_table, selectedobservations):
-    try:
-        df = pd.DataFrame(data_table)
-
-        if selectedobservations is None or len(selectedobservations) == 0:
-            return (
-                None,
-                dbc.Alert(
-                    "No observations selected",
-                    color="warning",
-                    dismissable=True,
-                ),
-            )
-        else:
-            df = df.iloc[selectedobservations]
-            to_download = dcc.send_data_frame(
-                df.to_csv, "reduced_selected_data_table.csv"
-            )
-    except Exception as e:
-        return (
-            None,
-            dbc.Alert(
-                f"Error downloading data: {e}",
-                color="danger",
-                dismissable=True,
-            ),
-        )
-
-    return (
-        to_download,
         None,
     )

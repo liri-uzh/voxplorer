@@ -54,6 +54,7 @@ layout = html.Div(
                                 style={"display": "none"},
                             ),
                             dcc.Download(id="download-selected-csv"),
+                            dcc.Download(id="download-reduced-selected-csv"),
                             html.Div(id="download-selected-output"),
                         ],
                     ),
@@ -191,7 +192,10 @@ def download_all(n_clicks, data_table, reduced_data_table):
     to_download_full = None
     try:
         df = pd.DataFrame(data_table)
-        to_download_full = dcc.send_data_frame(df.to_csv, "data_table.csv")
+        to_download_full = dcc.send_data_frame(
+            df.to_csv,
+            "data_table.csv",
+        )
     except Exception as e:
         alert = dbc.Alert(
             f"Error downloading full data: {e}",
@@ -204,7 +208,8 @@ def download_all(n_clicks, data_table, reduced_data_table):
         try:
             df = pd.DataFrame(reduced_data_table)
             to_download_reduced = dcc.send_data_frame(
-                df.to_csv, "data_table_reduced.csv"
+                df.to_csv,
+                "data_table_reduced.csv",
             )
         except Exception as e:
             alert = dbc.Alert(
@@ -226,6 +231,7 @@ def download_all(n_clicks, data_table, reduced_data_table):
 @callback(
     [
         Output("download-selected-csv", "data"),
+        Output("download-reduced-selected-csv", "data"),
         Output("download-selected-output", "children"),
     ],
     [
@@ -233,37 +239,61 @@ def download_all(n_clicks, data_table, reduced_data_table):
     ],
     [
         State("stored-table", "data"),
+        State("stored-reduced-data", "data"),
         State("selected-observations", "data"),
     ],
     prevent_initial_call=True,
 )
-def download_selected(n_clicks, data_table, selectedobservations):
+def download_selected(n_clicks, data_table, reduced_data_table, selectedobservations):
+    alert = None
+    # Prep data
+    to_download_full = None
     try:
         df = pd.DataFrame(data_table)
 
         if selectedobservations is None or len(selectedobservations) == 0:
-            return (
-                None,
-                dbc.Alert(
-                    "No observations selected",
-                    color="warning",
-                    dismissable=True,
-                ),
+            alert = dbc.Alert(
+                "No observations selected",
+                color="warning",
+                dismissable=True,
             )
         else:
             df = df.iloc[selectedobservations]
-            to_download = dcc.send_data_frame(df.to_csv, "selected_data_table.csv")
+            to_download_full = dcc.send_data_frame(
+                df.to_csv,
+                "selected_data_table.csv",
+            )
     except Exception as e:
-        return (
-            None,
-            dbc.Alert(
-                f"Error downloading data: {e}",
-                color="danger",
-                dismissable=True,
-            ),
+        alert = dbc.Alert(
+            f"Error downloading data: {e}",
+            color="danger",
+            dismissable=True,
         )
 
+    # Prep reduced data
+    if reduced_data_table:
+        try:
+            df = pd.DataFrame(reduced_data_table)
+
+            if selectedobservations is None or len(selectedobservations) == 0:
+                to_download_reduced = None
+            else:
+                df = df.iloc[selectedobservations]
+                to_download_reduced = dcc.send_data_frame(
+                    df.to_csv,
+                    "selected_data_table_reduced.csv",
+                )
+        except Exception as e:
+            alert = dbc.Alert(
+                f"Error downloading reduced data: {e}",
+                color="danger",
+                dismissable=True,
+            )
+    else:
+        to_download_reduced = None
+
     return (
-        to_download,
-        None,
+        to_download_full,
+        to_download_reduced,
+        alert,
     )
