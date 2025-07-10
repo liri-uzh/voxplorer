@@ -645,37 +645,37 @@ def plot_update(
 
 
 # --- Callback 4a: downlaod all data ---
-@callback(
-    [
-        Output("download-reduced-all-csv", "data"),
-        Output("download-reduced-all-output", "children"),
-    ],
-    [
-        Input("download-reduced-all-btn", "n_clicks"),
-    ],
-    [
-        State("stored-reduced-data", "data"),
-    ],
-    prevent_initial_call=True,
-)
-def download_all_redueced(n_clicks, data_table):
-    try:
-        df = pd.DataFrame(data_table)
-        to_download = dcc.send_data_frame(df.to_csv, "reduced_data_table.csv")
-    except Exception as e:
-        return (
-            None,
-            dbc.Alert(
-                f"Error downloading data: {e}",
-                color="danger",
-                dismissable=True,
-            ),
-        )
-
-    return (
-        to_download,
-        None,
-    )
+# @callback(
+#     [
+#         Output("download-reduced-all-csv", "data"),
+#         Output("download-reduced-all-output", "children"),
+#     ],
+#     [
+#         Input("download-reduced-all-btn", "n_clicks"),
+#     ],
+#     [
+#         State("stored-reduced-data", "data"),
+#     ],
+#     prevent_initial_call=True,
+# )
+# def download_all_redueced(n_clicks, data_table):
+#     try:
+#         df = pd.DataFrame(data_table)
+#         to_download = dcc.send_data_frame(df.to_csv, "reduced_data_table.csv")
+#     except Exception as e:
+#         return (
+#             None,
+#             dbc.Alert(
+#                 f"Error downloading data: {e}",
+#                 color="danger",
+#                 dismissable=True,
+#             ),
+#         )
+#
+#     return (
+#         to_download,
+#         None,
+#     )
 
 
 # --- Callback 4b: download selected data ---

@@ -37,6 +37,7 @@ layout = html.Div(
                                 style={"display": "none"},
                             ),
                             dcc.Download(id="download-all-csv"),
+                            dcc.Download(id="download-reduced-all-csv"),
                             html.Div(id="download-all-output"),
                         ],
                     ),
@@ -172,6 +173,7 @@ def build_interactive_table(data_table, meta_columns):
 @callback(
     [
         Output("download-all-csv", "data"),
+        Output("download-reduced-all-csv", "data"),
         Output("download-all-output", "children"),
     ],
     [
@@ -179,26 +181,44 @@ def build_interactive_table(data_table, meta_columns):
     ],
     [
         State("stored-table", "data"),
+        State("stored-reduced-data", "data"),
     ],
     prevent_initial_call=True,
 )
-def download_all(n_clicks, data_table):
+def download_all(n_clicks, data_table, reduced_data_table):
+    alert = None
+    # Prep data
+    to_download_full = None
     try:
         df = pd.DataFrame(data_table)
-        to_download = dcc.send_data_frame(df.to_csv, "data_table.csv")
+        to_download_full = dcc.send_data_frame(df.to_csv, "data_table.csv")
     except Exception as e:
-        return (
-            None,
-            dbc.Alert(
-                f"Error downloading data: {e}",
-                color="danger",
-                dismissable=True,
-            ),
+        alert = dbc.Alert(
+            f"Error downloading full data: {e}",
+            color="danger",
+            dismissable=True,
         )
 
+    # Prep reduced data
+    if reduced_data_table:
+        try:
+            df = pd.DataFrame(reduced_data_table)
+            to_download_reduced = dcc.send_data_frame(
+                df.to_csv, "data_table_reduced.csv"
+            )
+        except Exception as e:
+            alert = dbc.Alert(
+                f"Error downloading reduced data: {e}",
+                color="danger",
+                dismissable=True,
+            )
+    else:
+        to_download_reduced = None
+
     return (
-        to_download,
-        None,
+        to_download_full,
+        to_download_reduced,
+        alert,
     )
 
 
