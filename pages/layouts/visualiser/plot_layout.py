@@ -527,78 +527,82 @@ def plot_update(
     ctx = dash.callback_context
     if not ctx.triggered:
         raise PreventUpdate
+    alert = None
+    stop = False
 
     if reduced_data is None:
-        return (
-            None,
-            dbc.Alert(
-                "Data must be first reduced before plotting!",
-                color="danger",
-            ),
+        fig = None
+        alert = dbc.Alert(
+            "Data must be first reduced before plotting!",
+            color="danger",
         )
+        stop = True
 
     # Create figure
-    try:
-        title = f"{algorithm.upper()} {n_components}D embedding"
-        df = pl.DataFrame(reduced_data)
+    if not stop:
+        try:
+            title = f"{algorithm.upper()} {n_components}D embedding"
+            df = pl.DataFrame(reduced_data)
 
-        # Make sure metavars are categorical
-        if color and color in df.columns:
-            df = df.cast({color: pl.String})
-        if symbol and symbol in df.columns:
-            df = df.cast({symbol: pl.String})
+            # Make sure metavars are categorical
+            if color and color in df.columns:
+                df = df.cast({color: pl.String})
+            if symbol and symbol in df.columns:
+                df = df.cast({symbol: pl.String})
 
-        if n_components == 2:
-            fig = scatter_2d(
-                data=df,
-                x="DIM1",
-                y="DIM2",
-                color=color,
-                symbol=symbol,
-                selections=selected_obs,
-                hover_data=metavars if metavars else None,
-                color_discrete_sequence=color_opts[color_map],
-                template=template,
-                title=title,
-            )
-        elif n_components == 3:
-            fig = scatter_3d(
-                data=df,
-                x="DIM1",
-                y="DIM2",
-                z="DIM3",
-                color=color,
-                symbol=symbol,
-                selections=selected_obs,
-                hover_data=metavars if metavars else None,
-                color_discrete_sequence=color_opts[color_map],
-                template=template,
-                title=title,
-            )
-        else:
-            return (
-                None,
-                dbc.Alert(
+            if n_components == 2:
+                fig = scatter_2d(
+                    data=df,
+                    x="DIM1",
+                    y="DIM2",
+                    color=color,
+                    symbol=symbol,
+                    selections=selected_obs,
+                    hover_data=metavars if metavars else None,
+                    color_discrete_sequence=color_opts[color_map],
+                    template=template,
+                    title=title,
+                )
+            elif n_components == 3:
+                fig = scatter_3d(
+                    data=df,
+                    x="DIM1",
+                    y="DIM2",
+                    z="DIM3",
+                    color=color,
+                    symbol=symbol,
+                    selections=selected_obs,
+                    hover_data=metavars if metavars else None,
+                    color_discrete_sequence=color_opts[color_map],
+                    template=template,
+                    title=title,
+                )
+                alert = dbc.Alert(
+                    "Interactive selection in the plot is not available for 3D plots.",
+                    color="info",
+                    dismissable=True,
+                )
+            else:
+                fig = None
+                alert = dbc.Alert(
                     f"Invalid number of dimensions: {n_components}",
                     color="danger",
-                ),
-            )
-    except Exception as e:
-        print(e)
-        return (
-            None,
-            dbc.Alert(
+                )
+        except Exception as e:
+            print(e)
+            fig = None
+            alert = dbc.Alert(
                 f"Error creating figure: {e}",
                 color="danger",
                 dismissable=True,
-            ),
+            )
+
+        # Set default dragmode
+        fig.update_layout(
+            dragmode="select",
         )
 
-    # Set default dragmode
-    fig.update_layout(
-        dragmode="select",
-    )
     return (
         fig,
-        None,
+        alert,
     )

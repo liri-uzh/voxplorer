@@ -81,14 +81,16 @@ def scatter_2d(
             cd = subdf[hover_data].to_numpy()
             cd = np.hstack([idx, cd])
             hint = (
-                "<br>".join(
+                f"id: %{{customdata[{0}]}}<br>"
+                + "<br>".join(
                     [f"{c}: %{{customdata[{k + 1}]}}" for k, c in enumerate(hover_data)]
                 )
                 + "<extra></extra>"
             )
+
         else:
             cd = idx
-            hint = None
+            hint = f"id: %{{customdata[{0}]}}"
 
         fig.add_trace(
             go.Scatter(
@@ -134,7 +136,7 @@ def scatter_3d(
     hover_data: Sequence[str] = None,
     title: str = None,
     template: str = None,
-) -> go.Figure:
+):
     if isinstance(data, pl.DataFrame):
         df = data.to_pandas()
     elif isinstance(data, list):
@@ -146,19 +148,9 @@ def scatter_3d(
             "Invalid data parsed. Must be dict, polars.DataFrame, or pandas.DataFrame."
         )
 
-    # Get grouping keys
-    group_cols = []
-    if color:
-        group_cols.append(color)
-    if symbol:
-        group_cols.append(symbol)
-
     # Build figure
     fig = go.Figure()
-    if group_cols:
-        grouped = df.groupby(group_cols, dropna=False)
-    else:
-        grouped = [(None, df)]
+    traced_groups = set()
 
     # Prep maps
     palette = color_discrete_sequence
@@ -166,8 +158,16 @@ def scatter_3d(
     unique_colors = df[color].dropna().unique() if color else []
     unique_symbols = df[symbol].dropna().unique() if symbol else []
 
-    # Trace
-    for grp, subdf in grouped:
+    # Traces
+    for idx, row in df.iterrows():
+        grp = None
+        if color is not None and symbol is not None:
+            grp = (row[color], row[symbol])
+        elif color is not None:
+            grp = row[color]
+        elif symbol is not None:
+            grp = row[symbol]
+
         if grp is None:
             name = ""
         elif isinstance(grp, tuple):
@@ -175,52 +175,51 @@ def scatter_3d(
         else:
             name = str(grp)
 
-        # Markers
-        mk = dict(size=8, opacity=0.8)
-        if color and color in subdf.columns:
+        mk = dict(size=8)
+        if color:
             i = list(unique_colors).index(grp if not isinstance(grp, tuple) else grp[0])
             mk["color"] = palette[i % len(palette)]
+        else:
+            mk["color"] = "rgba(0, 0, 0, 0.5)"
 
-        if symbol and symbol in subdf.columns:
+        if symbol:
             j = list(unique_symbols).index(
                 grp if not isinstance(grp, tuple) else grp[1]
             )
             mk["symbol"] = symbols[j % len(symbols)]
 
+        mk["opacity"] = 0.8 if not selections or idx in selections else 0.2
+
         # Hover template
-        idx = np.asarray(subdf.index).reshape(-1, 1)
         if hover_data:
-            cd = subdf[hover_data].to_numpy()
+            cd = row[hover_data].to_numpy()
             cd = np.hstack([idx, cd])
             hint = (
-                "<br>".join(
-                    [f"{c}: %{{customdata[{k + 1}]}}" for k, c in enumerate(hover_data)]
-                )
+                f"id: {idx}<br>"
+                + "<br>".join([f"{h}: {row[h]}" for h in hover_data])
                 + "<extra></extra>"
             )
+
         else:
             cd = idx
-            hint = None
+            hint = f"id: {idx}"
 
         fig.add_trace(
             go.Scatter3d(
-                x=subdf[x],
-                y=subdf[y],
-                z=subdf[z],
+                x=[row[x]],
+                y=[row[y]],
+                z=[row[z]],
                 mode="markers",
-                name=name,
                 marker=mk,
                 customdata=cd,
+                name=name,
                 hovertemplate=hint,
-                selected=dict(marker=dict(opacity=0.8)),
-                unselected=dict(marker=dict(opacity=0.2)),
+                showlegend=True if name != "" and not name in traced_groups else False,
             )
         )
-        if selections:
-            trace = fig.data[-1]
-            cd = list(trace.customdata)
-            sel_pts = [i for i, cd_pt in enumerate(cd) if cd_pt[0] in selections]
-            trace.selectedpoints = sel_pts
+
+        if name:
+            traced_groups.add(name)
 
     # Final touches
     fig.update_layout(
