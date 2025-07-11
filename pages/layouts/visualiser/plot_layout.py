@@ -561,31 +561,20 @@ def plot_update(
                 template=template,
                 title=title,
             )
-        # elif n_components == 3:
-        #     fig = scatter_3d(
-        #         data=df,
-        #         x="DIM1",
-        #         y="DIM2",
-        #         z="DIM3",
-        #
-        #     )
-        # elif n_components == 3:
-        #     fig = scatter_3d(
-        #         df=df,
-        #         x="DIM1",
-        #         y="DIM2",
-        #         z="DIM3",
-        #         hover_data=[col for col in metavars if col in df.columns]
-        #         if metavars
-        #         else None,
-        #         color=color if color else None,
-        #         symbol=symbol if symbol else None,
-        #         color_discrete_sequence=color_opts[color_map],
-        #         template=template,
-        #         title=title,
-        #         height=None,
-        #         width=1080,
-        #     )
+        elif n_components == 3:
+            fig = scatter_3d(
+                data=df,
+                x="DIM1",
+                y="DIM2",
+                z="DIM3",
+                color=color,
+                symbol=symbol,
+                selections=selected_obs,
+                hover_data=metavars if metavars else None,
+                color_discrete_sequence=color_opts[color_map],
+                template=template,
+                title=title,
+            )
         else:
             return (
                 None,
