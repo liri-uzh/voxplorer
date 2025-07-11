@@ -16,7 +16,7 @@ from pages.layouts.visualiser import (
     dimensionality_reduction_opts,
     plot_layout,
 )
-from lib.plotting import scatter_2d
+from lib.plotting import scatter_2d, scatter_3d
 
 
 # init
@@ -259,7 +259,6 @@ def table_selected_data(
 
 
 # --- Callback 4: sync selected data between plot and figure---
-# TODO: add 3d plotting
 @callback(
     [
         Output("selected-observations", "data", allow_duplicate=True),
@@ -356,18 +355,35 @@ def sync_selected_data(
                 )
         try:
             title = f"{algorithm.upper()} {n_components}D embedding"
-            fig = scatter_2d(
-                data=reduced_data,
-                x="DIM1",
-                y="DIM2",
-                color=color,
-                symbol=symbol,
-                selections=selected,
-                hover_data=metavars if metavars else None,
-                color_discrete_sequence=plot_layout.color_opts[color_map],
-                template=template,
-                title=title,
-            )
+            if n_components == 2:
+                fig = scatter_2d(
+                    data=reduced_data,
+                    x="DIM1",
+                    y="DIM2",
+                    color=color,
+                    symbol=symbol,
+                    selections=selected,
+                    hover_data=metavars if metavars else None,
+                    color_discrete_sequence=plot_layout.color_opts[color_map],
+                    template=template,
+                    title=title,
+                )
+            elif n_components == 3:
+                fig = scatter_3d(
+                    data=reduced_data,
+                    x="DIM1",
+                    y="DIM2",
+                    z="DIM3",
+                    color=color,
+                    symbol=symbol,
+                    selections=selected,
+                    hover_data=metavars if metavars else None,
+                    color_discrete_sequence=plot_layout.color_opts[color_map],
+                    template=template,
+                    title=title,
+                )
+            else:
+                raise ValueError(f"Invalid number of dimensions: {n_components}")
         except Exception as e:
             print(f"Error updating plot selections from table: {e}")
     else:
