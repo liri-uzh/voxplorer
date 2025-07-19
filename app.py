@@ -1,5 +1,8 @@
+import os
+import signal
 import dash
-from dash import html, dcc, Input, Output
+from dash import dcc, Input, Output
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 # Create the dash app
@@ -32,6 +35,15 @@ navbar = dbc.NavbarSimple(
                 #         active="partial",
                 #     )
                 # ),
+                dbc.NavItem(
+                    dbc.NavLink(
+                        "Exit",
+                        id="exit-link",
+                        href="#",
+                        active="partial",
+                        className="text-danger",
+                    )
+                ),
             ],
             pills=True,
             navbar=True,
@@ -49,23 +61,48 @@ app.layout = dbc.Container(
         # navigation bar
         navbar,
         dash.page_container,
-    ]
+        dcc.ConfirmDialog(
+            id="confirm-exit",
+            message="Are you sure you want to exit?",
+        ),
+    ],
+    id="app-container",
 )
 
 
-# def print_layout(component, indent=0):
-#     space = "\t" * indent
-#     comp_type = type(component).__name__
-#     comp_id = getattr(component, "id", None)
-#     print(f"{space}{comp_type}: {comp_id}")
-#
-#     children = getattr(component, "children", None)
-#     if children:
-#         if isinstance(children, list):
-#             for child in children:
-#                 print_layout(child, indent + 1)
-#         else:
-#             print_layout(children, indent + 1)
+@app.callback(
+    Output("confirm-exit", "displayed"),
+    Input("exit-link", "n_clicks"),
+)
+def display_confirm_dialog(n_clicks):
+    if n_clicks:
+        return True
+    return False
+
+
+@app.callback(
+    [
+        Output("exit-link", "children"),
+        Output("app-container", "children"),
+    ],
+    [
+        Input("confirm-exit", "submit_n_clicks"),
+        Input("confirm-exit", "cancel_n_clicks"),
+    ],
+)
+def handle_exit(submit_clicks, cancel_clicks):
+    if submit_clicks:
+        os.kill(os.getpid(), signal.SIGINT)
+        return (
+            "Exit",
+            [
+                dbc.Alert(
+                    "App not running!",
+                    color="danger",
+                )
+            ],
+        )
+    raise PreventUpdate
 
 
 if __name__ == "__main__":
