@@ -71,7 +71,7 @@ The general workflow is described in the following diagram;
 `Voxplorer` has 3 types of outputs:
 1. tables (`CSV`)
 2. figures (`PNG`)
-3. logs (`JSON`)
+3. logs (`JSON`)  
 Tables are always the full features table (either uploaded or computed within the 
 dashboard) and the reduced dimensions table (if dimensionlity reduction was ran). 
 These can be either all observations or only selected observations (two different 
