@@ -62,7 +62,43 @@ python3 app.py
 In the output you will see where the address at which the app is running locally; 
 copy it in your chosen browser address. 
 *Normally the app will run at 127.0.0.1:8050*
-<!--TODO: ## Creating an alias for voxplorer -->
+
+## Creating an alias for voxplorer 
+If you would like to be able to always run voxplorer from anywhere 
+in your terminal, simply add the following function to your shell rc file.
+```sh
+voxplorer () {
+  cur_dir = $pwd
+
+  # run voxplorer
+  cd /path/to/voxplorer/
+  uv run app.py &
+
+  # Get PID
+  local pid=$!
+
+  # open browser
+  sleep 5
+  open http://127.0.0.1:8050/
+
+  # Wait
+  wait "$pid"
+  
+  # Return home
+  cd "$cur_dir"
+}
+```
+Now from anywhere in your terminal you can run `voxplorer` and the app will start.
+If you are on linux, please change the line:
+```sh
+  open http://127.0.0.1:8050/
+```
+with:
+```sh
+  xdg-open http://127.0.0.1:8050/
+```
+
+
 # Workflow
 The general workflow is described in the following diagram; 
 ![Workflow diagram](./images/block_diagram.png)
