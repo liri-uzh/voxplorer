@@ -1,0 +1,8 @@
+/* assets/styles.css */
+.exit-button {
+    color: white; /* Text color */
+    background-color: red; /* Background color */
+    border: none; /* Remove border */
+    padding: 10px 20px; /* Add some padding */
+    border-radius: 5px; /* Rounded corners */
+}
