@@ -87,7 +87,7 @@ are basically a screenshot of the figure as seen currently.
 1. the [data loader](./lib/data_loader.py)
 2. the [feature extractor](./lib/feature_extraction.py)
 3. the [dimensionality reduction](./lib/dimensionality_reduction.py)
-4. the [plotter](./lib/plotting.py)
+4. the [plotter](./lib/plotting.py)  
 Each function and class in these files is well documented within their docstring, 
 but more in-detail documentation should be coming soon.
 
