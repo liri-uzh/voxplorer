@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# voxplorer (Alpha v1.0.0)
-![Embedding Projector example](screenshots/embedding_dark.png)  
-=======
 # Voxplorer
 Voxplorer is a web-app dashboard tailored to the analysis of voices.  
 Voxplorer allows users to upload their pre–computed data in the form of 
@@ -23,7 +19,6 @@ their visualisations and reduced dimension space.
 The figure also supports download as a `PNG` image.  
   
 ![Example plot from voxplorer](./images/newplot.png)
->>>>>>> release/2.0.0
 
 # Installation
 ## Cloning the repository
