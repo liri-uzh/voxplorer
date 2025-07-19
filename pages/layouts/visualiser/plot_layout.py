@@ -485,7 +485,10 @@ def create_style_dropdowns(
     return (
         color_by_children,
         shape_by_children,
-        {"display": "block"},
+        {
+            "display": "flex",
+            "flexDirection": "row",
+        },
     )
 
 
