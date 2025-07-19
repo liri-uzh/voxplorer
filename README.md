@@ -130,3 +130,8 @@ but more in-detail documentation should be coming soon.
 # Upcoming features
 - [ ] voxplorer on pypi
 - [ ] recogniser
+
+# Supported OSs
+- MacOS
+- Linux (not tested yet, but should work)
+- Windows (not tested, should work with small changes on how app is called initially)
