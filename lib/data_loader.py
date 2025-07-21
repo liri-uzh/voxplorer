@@ -45,6 +45,9 @@ def parse_table_contents(contents, filename):
             dismissable=True,
         )
 
+    # Add row_index
+    data_table = data_table.with_row_index("row_index")
+
     # Make JSON serialisable
     try:
         data_table = data_table.to_dicts()
@@ -117,6 +120,9 @@ def parse_audio_contents(
                 dismissable=True,
             ),
         )
+
+    # Add row_index
+    data_table = data_table.with_row_index("row_index")
 
     # Make JSON serialisable
     try:

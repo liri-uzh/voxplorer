@@ -460,7 +460,7 @@ def create_style_dropdowns(
     try:
         color_by_children = _make_styling_dropdowns(
             id="color-by-dropdown",
-            metavars=metavars,
+            metavars=metavars[1:] or None,
         )
     except Exception as e:
         print(f"Error creating 'color-by-dropdown: {e}")
@@ -472,7 +472,7 @@ def create_style_dropdowns(
     try:
         shape_by_children = _make_styling_dropdowns(
             id="shape-by-dropdown",
-            metavars=metavars,
+            metavars=metavars[1:] or None,
         )
     except Exception as e:
         print(f"Error creating 'shape-by-dropdown': {e}")

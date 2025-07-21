@@ -61,7 +61,9 @@ def display_columns_checklist(data_table):
     # create checklist
     checklist = dbc.Checklist(
         id="meta-columns-checklist",
-        options=[{"label": col, "value": col} for col in colnames if col != "index"],
+        options=[
+            {"label": col, "value": col} for col in colnames if col != "row_index"
+        ],
         value=[],
         style={"display": "block"},
     )

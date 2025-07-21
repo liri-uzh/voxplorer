@@ -203,6 +203,9 @@ def promote_and_clear_temp_store(
     else:
         print("Problem storing data: triggered by none")
         raise PreventUpdate
+
+    new_meta.insert(0, "row_index")
+
     return (
         new_table,
         new_meta,

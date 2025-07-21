@@ -106,4 +106,4 @@ def handle_exit(submit_clicks, cancel_clicks):
 
 
 if __name__ == "__main__":
-    app.run_server()
+    app.run_server(debug=True)

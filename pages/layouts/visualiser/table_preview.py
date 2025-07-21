@@ -122,6 +122,7 @@ def build_interactive_table(data_table, meta_columns):
 
     # build interactive table
     try:
+        # TODO: set cell sizes
         interactive_table = dash_table.DataTable(
             id="interactive-table",
             data=data_table,
@@ -129,9 +130,9 @@ def build_interactive_table(data_table, meta_columns):
             editable=True,
             sort_action="native",
             filter_action="native",
+            page_action="none",
             row_selectable="multi",
             row_deletable=False,
-            page_size=20,
             style_cell={
                 "fontFamily": "Arial",
                 "padding": "5px 10px",
@@ -144,6 +145,7 @@ def build_interactive_table(data_table, meta_columns):
                 "maxWidth": "100%",
                 "overflowX": "auto",
             },
+            virtualization=True,
         )
 
         return (

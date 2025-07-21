@@ -81,8 +81,7 @@ def scatter_2d(
             cd = subdf[hover_data].to_numpy()
             cd = np.hstack([idx, cd])
             hint = (
-                f"id: %{{customdata[{0}]}}<br>"
-                + "<br>".join(
+                "<br>".join(
                     [f"{c}: %{{customdata[{k + 1}]}}" for k, c in enumerate(hover_data)]
                 )
                 + "<extra></extra>"
@@ -90,7 +89,7 @@ def scatter_2d(
 
         else:
             cd = idx
-            hint = f"id: %{{customdata[{0}]}}"
+            hint = f"row_index: %{{customdata[{0}]}}"
 
         fig.add_trace(
             go.Scatter(
@@ -195,9 +194,7 @@ def scatter_3d(
             cd = row[hover_data].to_numpy()
             cd = np.hstack([idx, cd])
             hint = (
-                f"id: {idx}<br>"
-                + "<br>".join([f"{h}: {row[h]}" for h in hover_data])
-                + "<extra></extra>"
+                "<br>".join([f"{h}: {row[h]}" for h in hover_data]) + "<extra></extra>"
             )
 
         else:
