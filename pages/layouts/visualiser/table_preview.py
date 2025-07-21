@@ -28,6 +28,16 @@ layout = html.Div(
                     width=2,
                 ),
                 dbc.Col(
+                    dbc.Button(
+                        "Reload table",
+                        id="reload-table-btn",
+                        color="secondary",
+                        className="mt-3",
+                        style={"display": "none"},
+                    ),
+                    width=2,
+                ),
+                dbc.Col(
                     html.Div(
                         [
                             dbc.Button(
@@ -65,6 +75,18 @@ layout = html.Div(
             ]
         ),
         dbc.Row(
+            html.Div(
+                html.A(
+                    "Filtering syntax help",
+                    href="https://dash.plotly.com/datatable/filtering",
+                    target="_blank",
+                    className="mt-2 d-block",
+                ),
+                id="filtering-docs-link",
+                style={"display": "none"},
+            ),
+        ),
+        dbc.Row(
             dbc.Col(
                 html.Div(
                     id="interactive-data-container",
@@ -83,18 +105,27 @@ layout = html.Div(
         Output("interactive-data-container", "children"),
         Output("select-all-btn", "style"),
         Output("deselect-all-btn", "style"),
+        Output("reload-table-btn", "style"),
         Output("download-all-btn", "style"),
         Output("download-selected-btn", "style"),
+        Output("filtering-docs-link", "style"),
     ],
     [
         Input("stored-table", "data"),
         Input("stored-metainformation", "data"),
+        Input("reload-table-btn", "n_clicks"),
     ],
 )
-def build_interactive_table(data_table, meta_columns):
+def build_interactive_table(
+    data_table,
+    meta_columns,
+    n_clicks,
+):
     if data_table is None and meta_columns is None:
         return (
             [],
+            {"display": "none"},
+            {"display": "none"},
             {"display": "none"},
             {"display": "none"},
             {"display": "none"},
@@ -109,7 +140,7 @@ def build_interactive_table(data_table, meta_columns):
     columns_config = []
     for col in sample_row.keys():
         # Use type 'text' if variable is meta-information; else numeric
-        col_type = "text" if col in meta_columns else "numeric"
+        col_type = "text" if col != "row_index" and col in meta_columns else "numeric"
         columns_config.append(
             {
                 "name": col,
@@ -123,6 +154,7 @@ def build_interactive_table(data_table, meta_columns):
     # build interactive table
     try:
         # TODO: set cell sizes
+        # FIXME: when no pagination, if only one row -> row squashed
         interactive_table = dash_table.DataTable(
             id="interactive-table",
             data=data_table,
@@ -157,6 +189,8 @@ def build_interactive_table(data_table, meta_columns):
             {"display": "block"},
             {"display": "block"},
             {"display": "block"},
+            {"display": "block"},
+            {"display": "block"},
         )
     except Exception as e:
         return (
@@ -165,6 +199,8 @@ def build_interactive_table(data_table, meta_columns):
                 color="danger",
                 dismissable=True,
             ),
+            {"display": "none"},
+            {"display": "none"},
             {"display": "none"},
             {"display": "none"},
             {"display": "none"},
