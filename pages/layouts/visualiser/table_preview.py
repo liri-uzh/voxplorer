@@ -1,7 +1,5 @@
 import json
-import dash
 from dash import html, callback, Input, Output, State, dash_table, dcc
-from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -133,7 +131,7 @@ def build_interactive_table(data_table, meta_columns):
             filter_action="native",
             row_selectable="multi",
             row_deletable=False,
-            page_size=15,
+            page_size=20,
             style_cell={
                 "fontFamily": "Arial",
                 "padding": "5px 10px",
