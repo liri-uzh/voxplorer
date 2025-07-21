@@ -10,7 +10,6 @@ from dash import dcc, html, callback, Input, Output, State, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import numpy as np
-import pandas as pd
 import plotly.express as px
 import polars as pl
 
@@ -134,20 +133,21 @@ layout = html.Div(
     [
         dbc.Row(
             [
-                dbc.Col(
+                html.Div(
                     dcc.Graph(
                         id="plot",
+                        responsive=True,
                         style={
-                            "width": "110vh",
-                            "height": "110vh",
-                        },
-                        config={
-                            "displayModeBar": True,
-                            "displaylogo": False,
-                            "scrollZoom": True,
+                            "height": "100%",
                         },
                     ),
-                    width=12,
+                    style={
+                        "width": "100%",  # Fluid width
+                        "height": "800px",
+                        "border": "2px solid #2196F3",
+                        "padding": "10px",
+                        "margin": "10px 0",
+                    },
                 ),
                 dbc.Card(
                     dbc.CardBody(
