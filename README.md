@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16103648.svg)](https://doi.org/10.5281/zenodo.16103648)
 # Voxplorer
 Voxplorer is a web-app dashboard tailored to the analysis of voices.  
 Voxplorer allows users to upload their pre–computed data in the form of 
