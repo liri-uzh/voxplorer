@@ -41,7 +41,7 @@ layout = html.Div(
                     html.Div(
                         [
                             dbc.Button(
-                                "Downlaod All",
+                                "Download All",
                                 id="download-all-btn",
                                 style={"display": "none"},
                             ),
@@ -59,7 +59,7 @@ layout = html.Div(
                     html.Div(
                         [
                             dbc.Button(
-                                "Downlaod Selected",
+                                "Download Selected",
                                 id="download-selected-btn",
                                 style={"display": "none"},
                             ),

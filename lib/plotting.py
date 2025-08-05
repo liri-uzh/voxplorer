@@ -50,7 +50,16 @@ def scatter_2d(
 
     # Prep maps
     palette = color_discrete_sequence
-    symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x"]
+    symbols = [
+        "circle",
+        "square",
+        "cross",
+        "diamond",
+        "x",
+        "circle-open",
+        "square-open",
+        "diamond-open",
+    ]
     unique_colors = df[color].dropna().unique() if color else []
     unique_symbols = df[symbol].dropna().unique() if symbol else []
 
@@ -153,7 +162,16 @@ def scatter_3d(
 
     # Prep maps
     palette = color_discrete_sequence
-    symbols = ["circle", "square", "diamond", "cross", "triangle-up", "x"]
+    symbols = [
+        "circle",
+        "square",
+        "cross",
+        "diamond",
+        "x",
+        "circle-open",
+        "square-open",
+        "diamond-open",
+    ]
     unique_colors = df[color].dropna().unique() if color else []
     unique_symbols = df[symbol].dropna().unique() if symbol else []
 
