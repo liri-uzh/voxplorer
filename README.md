@@ -41,11 +41,18 @@ If you are using [`uv`](https://docs.astral.sh/uv/) as a package manager you don
 dependencies in a virtual environment; you can run the app by simply running the 
 following `uv` command from the `voxplorer` directory.
 ```sh
-cp voxplorer
+cd voxplorer
 uv run app.py
 ```
 
+This will also directly start the app.  
+You can access it by copying the provided link in a browser, clicking on the 
+link directly from the terminal emulator (if supported by terminal emulator), 
+or going to `http://127.0.0.1:8050` from a browser.
+
 ## Installing dependencies using pip
+If you do not have `uv` installed or prefer to create your own Python virtual environment, 
+you can install the requirements via `pip`:
 ```sh
 cp voxplorer
 pip install -r requirements.txt
@@ -56,9 +63,20 @@ To run `voxplorer`, you can move the local repository and run
 ```sh
 uv run app.py
 ```
-or
+or without `uv`
 ```sh
 python3 app.py
+```
+
+Output should look something like:
+```sh
+INFO:dash.dash:Dash is running on http://127.0.0.1:8050/
+
+ * Serving Flask app 'app'
+ * Debug mode: off
+INFO:werkzeug:WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:8050
+INFO:werkzeug:Press CTRL+C to quit
 ```
 In the output you will see where the address at which the app is running locally; 
 copy it in your chosen browser address. 
@@ -66,7 +84,9 @@ copy it in your chosen browser address.
 
 ## Creating an alias for voxplorer 
 If you would like to be able to always run voxplorer from anywhere 
-in your terminal, simply add the following function to your shell rc file.
+in your terminal, simply add the following function to your shell rc file (usually 
+`~/.zshrc` on MacOS and Linux systems using `zsh` as their shell or `~/.bashrc`).  
+Remember to update the path to `voxplorer` to where you cloned the repository (update the line after `# run voxplorer`)
 ```sh
 voxplorer () {
   cur_dir = $pwd
@@ -127,10 +147,6 @@ are basically a screenshot of the figure as seen currently.
 4. the [plotter](./lib/plotting.py)  
 Each function and class in these files is well documented within their docstring, 
 but more in-detail documentation should be coming soon.
-
-# Upcoming features
-- [ ] voxplorer on pypi
-- [ ] recogniser
 
 # Supported OSs
 - MacOS
