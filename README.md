@@ -54,7 +54,7 @@ or going to `http://127.0.0.1:8050` from a browser.
 If you do not have `uv` installed or prefer to create your own Python virtual environment, 
 you can install the requirements via `pip`:
 ```sh
-cp voxplorer
+cd voxplorer
 pip install -r requirements.txt
 ```
 
