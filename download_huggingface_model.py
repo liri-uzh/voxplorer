@@ -9,6 +9,7 @@ project_root = str(Path(__file__).parent)
 
 
 def main(model_id: str):
+    # TODO: make sure model is speechbrain
     # Check dirs
     model_dir: str = os.path.join(project_root, model_id)
     if os.path.exists(model_dir):
@@ -22,3 +23,6 @@ def main(model_id: str):
             exit(1)
     else:
         os.makedirs(user_confirm, exist_ok=True)
+
+    # NOTE: Downloading model: https://huggingface.co/docs/hub/models-downloading
+    # to add to documentation
