@@ -301,12 +301,15 @@ class FeatureExtractor:
             Speaker embeddings.
         """
         # Init pre-trained model
-        if not os.path.isdir(".pretrained_spkrec_models"):
-            os.mkdir(".pretrained_spkrec_models")
+        model_dir: str = os.path.join(".pretrained_spkrec_models", model)
+
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir)
 
         # Load model
         classifier = EncoderClassifier.from_hparams(
-            source=model, savedir=".pretrained_spkrec_models"
+            source=model,
+            savedir=model_dir,
         )
 
         # Extract embeddings
