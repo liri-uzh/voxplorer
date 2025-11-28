@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 app = dash.Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=[dbc.themes.FLATLY],
+    external_stylesheets=[],  # No external stylesheets - using local assets/bootstrap_flatly_local.css
     prevent_initial_callbacks=True,
 )
 
