@@ -167,6 +167,8 @@ def extract_features(
     if logs is not None:
         if not isinstance(logs, dict):
             logs_out = dict(logs)
+        else:
+            logs_out = logs
     else:
         logs_out = {}
 
