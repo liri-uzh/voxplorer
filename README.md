@@ -190,9 +190,9 @@ Each function and class in these files is well documented within their docstring
 but more in-detail documentation should be coming soon.
 
 # Supported OSs
-- MacOS
-- Linux (not tested yet, but should work)
-- Windows (not tested, should work with `uv`)
+- MacOS ✅
+- Linux ⭕️ (not tested yet, but should work)
+- Windows ✅ (installation checked using `uv`)
 
 # Cite this work
 Cite our Interspeech 2025 Show&Tell paper:
