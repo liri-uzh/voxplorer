@@ -1,13 +1,15 @@
 # TODO document for LiRI-DORA.
 - [x] pages basic layout
-- [ ] README
+- [x] README
 - [ ] clean tests and dirs from deprecated modules
+- [ ] Test windows installation
+- [ ] Make sure upload first as str and then modify metavars to str and others to floating point
 
 
 ## Visualiser
     - [x] table view page functions and callbacks
     - [x] plot view page functions and callbacks
-    - [-] interconnectivity across pages (persistance of data + filtering on same data)
+    - [x] interconnectivity across pages (persistance of data + filtering on same data)
     - [x] **feature extraction and data stream**
 ### Layouts
     - [x] Options card:
@@ -22,7 +24,7 @@
         - ~dim-reduction specific options~
     - [x] Plot view + col / shape selection
 
-## Recogniser
+## ~Recogniser~
     - [ ] model selection
     - [ ] implementation of reference population for LR with ECAPA-TDNN?
     - [ ] implementation of UBM training?
