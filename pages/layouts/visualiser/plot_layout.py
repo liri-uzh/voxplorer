@@ -339,7 +339,14 @@ def run_dim_reduction(
 
             else:
                 # Just store param
-                parsed_kwargs[param_name] = values[i]
+                val = values[i]
+                # HACK: Hot fix for boolean values
+                # don't know why they are reset to str
+                if val == "false":
+                    val = False
+                elif val == "true":
+                    val = True
+                parsed_kwargs[param_name] = val
 
             # Always increse i (if custom we want to skip next)
             i += 1
