@@ -3,6 +3,8 @@
 - [x] README
 - [!] Check bug issue [issue #2](https://github.com/liri-uzh/voxplorer/issues/2#issue-3681707256) 
 - [!] **BUG: plot shape not reset to null after first selection** [issue #3](https://github.com/liri-uzh/voxplorer/issues/3#issue-3920289799) 
+- [!] **ERROR: plot before reduction breaks figure** [issue #4](https://github.com/liri-uzh/voxplorer/issues/4#issue-3920728802)   
+    - probable fix: don't return a figure when error for no reduced dim table is returned
 - [ ] clean tests and dirs from deprecated modules
 - [ ] Test windows installation
 - [ ] Make sure upload first as str and then modify metavars to str and others to floating point
