@@ -1,8 +1,8 @@
 # TODO document for LiRI-DORA.
 - [x] pages basic layout
 - [x] README
-- [!] Check bug issue #2
-- [!] **BUG: plot shape not reset to null after first selection** #3
+- [!] Check bug issue [issue #2](https://github.com/liri-uzh/voxplorer/issues/2#issue-3681707256) 
+- [!] **BUG: plot shape not reset to null after first selection** [issue #3](https://github.com/liri-uzh/voxplorer/issues/3#issue-3920289799) 
 - [ ] clean tests and dirs from deprecated modules
 - [ ] Test windows installation
 - [ ] Make sure upload first as str and then modify metavars to str and others to floating point
