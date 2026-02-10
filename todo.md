@@ -1,7 +1,8 @@
 # TODO document for LiRI-DORA.
 - [x] pages basic layout
 - [x] README
-- [!] **BUG: plot shape not reset to null after first selection**
+- [!] Check bug issue #2
+- [!] **BUG: plot shape not reset to null after first selection** issue #3
 - [ ] clean tests and dirs from deprecated modules
 - [ ] Test windows installation
 - [ ] Make sure upload first as str and then modify metavars to str and others to floating point
